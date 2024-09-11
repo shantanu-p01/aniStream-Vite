@@ -61,12 +61,6 @@ const HomePage = () => {
             >
               Family X Spy Episode 1
             </button>
-            <button
-              className={`w-full py-2 text-white rounded-lg ${activeEpisode === 'FamilyXSpy2' ? 'bg-blue-600' : 'bg-gray-700'}`}
-              onClick={() => handleEpisodeChange('FamilyXSpy2', '/FamilyXSpy2.mp4')}
-            >
-              Family X Spy Episode 2
-            </button>
             {/* Kaiju No. Episodes */}
             <button
               className={`w-full py-2 text-white rounded-lg ${activeEpisode === 'KaijuNo1' ? 'bg-blue-600' : 'bg-gray-700'}`}
