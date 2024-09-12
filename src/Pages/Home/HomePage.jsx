@@ -4,6 +4,16 @@ import 'plyr-react/plyr.css';
 import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
+// Reusable component for a button (Season/Episode)
+const Button = ({ isActive, onClick, children }) => (
+  <button
+    className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition duration-300 ${isActive ? 'bg-white/20' : 'bg-black/20'} text-white`}
+    onClick={onClick}
+  >
+    {children}
+  </button>
+);
+
 const HomePage = () => {
   const [videoSrc, setVideoSrc] = useState('/1/DeathNote1.mp4');
   const [activeEpisode, setActiveEpisode] = useState('DeathNote1');
@@ -16,32 +26,23 @@ const HomePage = () => {
     setVideoSrc(file);
   };
 
-  // Handle like button toggle
-  const handleLike = () => {
+  // Handle like/dislike button toggle
+  const toggleLikeDislike = (type) => {
     setLikeStatuses((prevStatuses) => ({
       ...prevStatuses,
-      [activeEpisode]: prevStatuses[activeEpisode] === 'like' ? null : 'like',
-    }));
-  };
-
-  // Handle dislike button toggle
-  const handleDislike = () => {
-    setLikeStatuses((prevStatuses) => ({
-      ...prevStatuses,
-      [activeEpisode]: prevStatuses[activeEpisode] === 'dislike' ? null : 'dislike',
+      [activeEpisode]: prevStatuses[activeEpisode] === type ? null : type,
     }));
   };
 
   // Handle season change and set default episode for the season
   const handleSeasonChange = (season) => {
     setActiveSeason(season);
-    if (season === 1) {
-      handleEpisodeChange('DeathNote1', '/1/DeathNote1.mp4');
-    } else if (season === 2) {
-      handleEpisodeChange('FamilyXSpy1', '/2/FamilyXSpy1.mp4');
-    } else if (season === 3) {
-      handleEpisodeChange('KaijuNo1', '/3/KaijuNo1.mp4');
-    }
+    const defaultEpisodes = {
+      1: { episode: 'DeathNote1', file: '/1/DeathNote1.mp4' },
+      2: { episode: 'FamilyXSpy1', file: '/2/FamilyXSpy1.mp4' },
+      3: { episode: 'KaijuNo1', file: '/3/KaijuNo1.mp4' },
+    };
+    handleEpisodeChange(defaultEpisodes[season].episode, defaultEpisodes[season].file);
   };
 
   // Plyr player properties
@@ -64,58 +65,11 @@ const HomePage = () => {
 
   const currentLikeStatus = likeStatuses[activeEpisode] || null;
 
-  // Render episodes based on active season
-  const renderEpisodes = () => {
-    if (activeSeason === 1) {
-      return (
-        <>
-          {/* Death Note Episodes */}
-          <button
-            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'DeathNote1' ? 'bg-white/10' : 'bg-black/20'}`}
-            onClick={() => handleEpisodeChange('DeathNote1', '/1/DeathNote1.mp4')}
-          >
-            1
-          </button>
-          <button
-            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'DeathNote2' ? 'bg-white/10' : 'bg-black/20'}`}
-            onClick={() => handleEpisodeChange('DeathNote2', '/1/DeathNote2.mp4')}
-          >
-            2
-          </button>
-        </>
-      );
-    } else if (activeSeason === 2) {
-      return (
-        <>
-          {/* Family X Spy Episodes */}
-          <button
-            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'FamilyXSpy1' ? 'bg-white/10' : 'bg-black/20'}`}
-            onClick={() => handleEpisodeChange('FamilyXSpy1', '/2/FamilyXSpy1.mp4')}
-          >
-            1
-          </button>
-        </>
-      );
-    } else if (activeSeason === 3) {
-      return (
-        <>
-          {/* Kaiju No. Episodes */}
-          <button
-            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'KaijuNo1' ? 'bg-white/10' : 'bg-black/20'}`}
-            onClick={() => handleEpisodeChange('KaijuNo1', '/3/KaijuNo1.mp4')}
-          >
-            1
-          </button>
-          <button
-            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'KaijuNo2' ? 'bg-white/10' : 'bg-black/20'}`}
-            onClick={() => handleEpisodeChange('KaijuNo2', '/3/KaijuNo2.mp4')}
-          >
-            2
-          </button>
-        </>
-      );
-    }
-    return null;
+  // Episodes list based on active season
+  const episodes = {
+    1: [{ episode: 'DeathNote1', file: '/1/DeathNote1.mp4' }, { episode: 'DeathNote2', file: '/1/DeathNote2.mp4' }],
+    2: [{ episode: 'FamilyXSpy1', file: '/2/FamilyXSpy1.mp4' }],
+    3: [{ episode: 'KaijuNo1', file: '/3/KaijuNo1.mp4' }, { episode: 'KaijuNo2', file: '/3/KaijuNo2.mp4' }],
   };
 
   return (
@@ -134,17 +88,17 @@ const HomePage = () => {
             <div className='flex items-center justify-center gap-8'>
               <button
                 className={`btn btn-ghost h-fit min-h-fit p-1 ${currentLikeStatus === 'like' ? 'text-blue-500' : 'text-white/80'}`}
-                onClick={handleLike}
+                onClick={() => toggleLikeDislike('like')}
               >
                 <BiSolidLike size="24" />
                 <h1 className='hidden sm:block'>Like</h1>
               </button>
               <button
                 className={`btn btn-ghost h-fit min-h-fit p-1 ${currentLikeStatus === 'dislike' ? 'text-red-500' : 'text-white/80'}`}
-                onClick={handleDislike}
+                onClick={() => toggleLikeDislike('dislike')}
               >
                 <BiSolidDislike size="24" />
-                <h1 className='hidden sm:block'>DisLike</h1>
+                <h1 className='hidden sm:block'>Dislike</h1>
               </button>
             </div>
             <button className='btn btn-ghost h-fit min-h-fit p-1 text-white/80'>
@@ -153,25 +107,26 @@ const HomePage = () => {
             </button>
           </div>
         </div>
+
         {/* Episodes Section */}
         <div className='w-full lg:w-1/3 rounded-lg bg-black/20'>
           <h1 className='text-2xl p-2 pb-0 font-semibold'>Season</h1>
           {/* Season Buttons */}
           <div className="flex flex-wrap justify-start items-center gap-2 p-2 pb-4">
-            {[1, 2, 3].map((number) => (
-              <button
-                key={number}
-                className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition duration-300 ${activeSeason === number ? 'bg-white/20' : 'bg-black/20'} text-white`}
-                onClick={() => handleSeasonChange(number)}
-              >
-                {number}
-              </button>
+            {[1, 2, 3].map((season) => (
+              <Button key={season} isActive={activeSeason === season} onClick={() => handleSeasonChange(season)}>
+                {season}
+              </Button>
             ))}
           </div>
           <h1 className='text-2xl px-2 pb-0 font-semibold'>Episodes</h1>
-          {/* Changed to Flex with Flex Wrap */}
+          {/* Episode Buttons */}
           <div className='flex flex-wrap justify-start items-center gap-2 p-2'>
-            {renderEpisodes()}
+            {episodes[activeSeason].map(({ episode, file }, index) => (
+              <Button key={index} isActive={activeEpisode === episode} onClick={() => handleEpisodeChange(episode, file)}>
+                {index + 1}
+              </Button>
+            ))}
           </div>
         </div>
       </div>
