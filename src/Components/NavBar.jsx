@@ -130,7 +130,7 @@ const NavBar = () => {
 
   return (
     <header className='z-30 w-screen h-16 px-2 flex items-center justify-center fixed select-none'>
-      <nav className='bg-[#1a1818]/50 w-[85%] md:w-[50%] h-full flex items-center justify-between px-4 rounded-full mt-4 relative'>
+      <nav className='bg-[#1a1818]/40 shadow-xl backdrop-blur-sm w-[85%] md:w-[50%] h-full flex items-center justify-between px-4 rounded-full mt-4 relative'>
         {/* leftLogo */}
         <div className='title left text-2xl flex items-center'>
           <h1 className='text-white/80'>
