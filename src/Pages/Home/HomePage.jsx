@@ -5,30 +5,46 @@ import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 const HomePage = () => {
-  const [videoSrc, setVideoSrc] = useState('/DeathNote1.mp4');
+  const [videoSrc, setVideoSrc] = useState('/1/DeathNote1.mp4');
   const [activeEpisode, setActiveEpisode] = useState('DeathNote1');
-  const [likeStatuses, setLikeStatuses] = useState({}); // Stores like/dislike status for each video
+  const [likeStatuses, setLikeStatuses] = useState({});
+  const [activeSeason, setActiveSeason] = useState(1); // State for active season button
 
+  // Handle episode change and set video source
   const handleEpisodeChange = (episode, file) => {
     setActiveEpisode(episode);
     setVideoSrc(file);
   };
 
+  // Handle like button toggle
   const handleLike = () => {
     setLikeStatuses((prevStatuses) => ({
       ...prevStatuses,
-      [activeEpisode]: prevStatuses[activeEpisode] === 'like' ? null : 'like', // Toggle like
+      [activeEpisode]: prevStatuses[activeEpisode] === 'like' ? null : 'like',
     }));
   };
 
+  // Handle dislike button toggle
   const handleDislike = () => {
     setLikeStatuses((prevStatuses) => ({
       ...prevStatuses,
-      [activeEpisode]: prevStatuses[activeEpisode] === 'dislike' ? null : 'dislike', // Toggle dislike
+      [activeEpisode]: prevStatuses[activeEpisode] === 'dislike' ? null : 'dislike',
     }));
   };
 
-  // Memoize plyrProps to prevent unnecessary re-renders
+  // Handle season change and set default episode for the season
+  const handleSeasonChange = (season) => {
+    setActiveSeason(season);
+    if (season === 1) {
+      handleEpisodeChange('DeathNote1', '/1/DeathNote1.mp4');
+    } else if (season === 2) {
+      handleEpisodeChange('FamilyXSpy1', '/2/FamilyXSpy1.mp4');
+    } else if (season === 3) {
+      handleEpisodeChange('KaijuNo1', '/3/KaijuNo1.mp4');
+    }
+  };
+
+  // Plyr player properties
   const plyrProps = useMemo(() => ({
     source: {
       type: 'video',
@@ -44,10 +60,63 @@ const HomePage = () => {
       controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
       ratio: '16:9',
     },
-  }), [videoSrc]); // Only re-create plyrProps when videoSrc changes
+  }), [videoSrc]);
 
-  // Get the like/dislike status for the current video
   const currentLikeStatus = likeStatuses[activeEpisode] || null;
+
+  // Render episodes based on active season
+  const renderEpisodes = () => {
+    if (activeSeason === 1) {
+      return (
+        <>
+          {/* Death Note Episodes */}
+          <button
+            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'DeathNote1' ? 'bg-white/10' : 'bg-black/20'}`}
+            onClick={() => handleEpisodeChange('DeathNote1', '/1/DeathNote1.mp4')}
+          >
+            1
+          </button>
+          <button
+            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'DeathNote2' ? 'bg-white/10' : 'bg-black/20'}`}
+            onClick={() => handleEpisodeChange('DeathNote2', '/1/DeathNote2.mp4')}
+          >
+            2
+          </button>
+        </>
+      );
+    } else if (activeSeason === 2) {
+      return (
+        <>
+          {/* Family X Spy Episodes */}
+          <button
+            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'FamilyXSpy1' ? 'bg-white/10' : 'bg-black/20'}`}
+            onClick={() => handleEpisodeChange('FamilyXSpy1', '/2/FamilyXSpy1.mp4')}
+          >
+            1
+          </button>
+        </>
+      );
+    } else if (activeSeason === 3) {
+      return (
+        <>
+          {/* Kaiju No. Episodes */}
+          <button
+            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'KaijuNo1' ? 'bg-white/10' : 'bg-black/20'}`}
+            onClick={() => handleEpisodeChange('KaijuNo1', '/3/KaijuNo1.mp4')}
+          >
+            1
+          </button>
+          <button
+            className={`w-10 h-10 text-white transition duration-300 rounded-lg ${activeEpisode === 'KaijuNo2' ? 'bg-white/10' : 'bg-black/20'}`}
+            onClick={() => handleEpisodeChange('KaijuNo2', '/3/KaijuNo2.mp4')}
+          >
+            2
+          </button>
+        </>
+      );
+    }
+    return null;
+  };
 
   return (
     <main className='pt-20 p-2 min-h-svh h-full w-full'>
@@ -86,42 +155,23 @@ const HomePage = () => {
         </div>
         {/* Episodes Section */}
         <div className='w-full lg:w-1/3 rounded-lg bg-black/20'>
-          <h1 className='text-2xl p-2 font-semibold'>Season</h1>
-          <h1 className='text-2xl px-2 pb-1 font-semibold'>Other Episodes</h1>
-          <div className='p-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2'>
-            {/* Death Note Episodes */}
-            <button
-              className={`w-full py-2 text-white transition duration-300 rounded-lg ${activeEpisode === 'DeathNote1' ? 'bg-white/10' : 'bg-black/20'}`}
-              onClick={() => handleEpisodeChange('DeathNote1', '/DeathNote1.mp4')}
-            >
-              Death Note Episode 1
-            </button>
-            <button
-              className={`w-full py-2 text-white transition duration-300 rounded-lg ${activeEpisode === 'DeathNote2' ? 'bg-white/10' : 'bg-black/20'}`}
-              onClick={() => handleEpisodeChange('DeathNote2', '/DeathNote2.mp4')}
-            >
-              Death Note Episode 2
-            </button>
-            {/* FamilyXSpy Episodes */}
-            <button
-              className={`w-full py-2 text-white transition duration-300 rounded-lg ${activeEpisode === 'FamilyXSpy1' ? 'bg-white/10' : 'bg-black/20'}`}
-              onClick={() => handleEpisodeChange('FamilyXSpy1', '/FamilyXSpy1.mp4')}
-            >
-              Family X Spy Episode 1
-            </button>
-            {/* Kaiju No. Episodes */}
-            <button
-              className={`w-full py-2 text-white transition duration-300 rounded-lg ${activeEpisode === 'KaijuNo1' ? 'bg-white/10' : 'bg-black/20'}`}
-              onClick={() => handleEpisodeChange('KaijuNo1', '/KaijuNo1.mp4')}
-            >
-              Kaiju No. Episode 1
-            </button>
-            <button
-              className={`w-full py-2 text-white transition duration-300 rounded-lg ${activeEpisode === 'KaijuNo2' ? 'bg-white/10' : 'bg-black/20'}`}
-              onClick={() => handleEpisodeChange('KaijuNo2', '/KaijuNo2.mp4')}
-            >
-              Kaiju No. Episode 2
-            </button>
+          <h1 className='text-2xl p-2 pb-0 font-semibold'>Season</h1>
+          {/* Season Buttons */}
+          <div className="flex flex-wrap justify-start items-center gap-2 p-2 pb-4">
+            {[1, 2, 3].map((number) => (
+              <button
+                key={number}
+                className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition duration-300 ${activeSeason === number ? 'bg-white/20' : 'bg-black/20'} text-white`}
+                onClick={() => handleSeasonChange(number)}
+              >
+                {number}
+              </button>
+            ))}
+          </div>
+          <h1 className='text-2xl px-2 pb-0 font-semibold'>Episodes</h1>
+          {/* Changed to Flex with Flex Wrap */}
+          <div className='flex flex-wrap justify-start items-center gap-2 p-2'>
+            {renderEpisodes()}
           </div>
         </div>
       </div>
