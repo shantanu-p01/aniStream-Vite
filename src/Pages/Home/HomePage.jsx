@@ -5,10 +5,11 @@ import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 // Reusable component for a button (Season/Episode)
-const Button = ({ isActive, onClick, children }) => (
+const Button = ({ isActive, onClick, children, disabled }) => (
   <button
-    className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition duration-300 ${isActive ? 'bg-white/20' : 'bg-black/20'} text-white`}
+    className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition duration-300 ${isActive ? 'bg-white/20' : 'bg-black/20'} text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     onClick={onClick}
+    disabled={disabled}
   >
     {children}
   </button>
@@ -19,6 +20,13 @@ const HomePage = () => {
   const [activeEpisode, setActiveEpisode] = useState('DeathNote1');
   const [likeStatuses, setLikeStatuses] = useState({});
   const [activeSeason, setActiveSeason] = useState(1); // State for active season button
+
+  // Episodes list based on active season
+  const episodes = {
+    1: [{ episode: 'DeathNote1', file: '/1/DeathNote1.mp4' }, { episode: 'DeathNote2', file: '/1/DeathNote2.mp4' }],
+    2: [{ episode: 'FamilyXSpy1', file: '/2/FamilyXSpy1.mp4' }],
+    3: [{ episode: 'KaijuNo1', file: '/3/KaijuNo1.mp4' }, { episode: 'KaijuNo2', file: '/3/KaijuNo2.mp4' }],
+  };
 
   // Handle episode change and set video source
   const handleEpisodeChange = (episode, file) => {
@@ -37,13 +45,37 @@ const HomePage = () => {
   // Handle season change and set default episode for the season
   const handleSeasonChange = (season) => {
     setActiveSeason(season);
-    const defaultEpisodes = {
-      1: { episode: 'DeathNote1', file: '/1/DeathNote1.mp4' },
-      2: { episode: 'FamilyXSpy1', file: '/2/FamilyXSpy1.mp4' },
-      3: { episode: 'KaijuNo1', file: '/3/KaijuNo1.mp4' },
-    };
-    handleEpisodeChange(defaultEpisodes[season].episode, defaultEpisodes[season].file);
+    const defaultEpisodes = episodes[season];
+    handleEpisodeChange(defaultEpisodes[0].episode, defaultEpisodes[0].file);
   };
+
+  // Handle navigating to the next episode
+  const handleNextEpisode = () => {
+    const currentEpisodes = episodes[activeSeason];
+    const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
+
+    if (currentIndex < currentEpisodes.length - 1) {
+      const nextEpisode = currentEpisodes[currentIndex + 1];
+      handleEpisodeChange(nextEpisode.episode, nextEpisode.file);
+    }
+  };
+
+  // Handle navigating to the previous episode
+  const handlePreviousEpisode = () => {
+    const currentEpisodes = episodes[activeSeason];
+    const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
+
+    if (currentIndex > 0) {
+      const previousEpisode = currentEpisodes[currentIndex - 1];
+      handleEpisodeChange(previousEpisode.episode, previousEpisode.file);
+    }
+  };
+
+  // Determine if next/previous buttons should be disabled
+  const currentEpisodes = episodes[activeSeason];
+  const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
+  const isNextDisabled = currentIndex === currentEpisodes.length - 1;
+  const isPreviousDisabled = currentIndex === 0;
 
   // Plyr player properties
   const plyrProps = useMemo(() => ({
@@ -60,17 +92,13 @@ const HomePage = () => {
       autoplay: false,
       controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
       ratio: '16:9',
+      keyboard: {
+        global: true, // Enables keyboard controls for the video player
+      },
     },
   }), [videoSrc]);
 
   const currentLikeStatus = likeStatuses[activeEpisode] || null;
-
-  // Episodes list based on active season
-  const episodes = {
-    1: [{ episode: 'DeathNote1', file: '/1/DeathNote1.mp4' }, { episode: 'DeathNote2', file: '/1/DeathNote2.mp4' }],
-    2: [{ episode: 'FamilyXSpy1', file: '/2/FamilyXSpy1.mp4' }],
-    3: [{ episode: 'KaijuNo1', file: '/3/KaijuNo1.mp4' }, { episode: 'KaijuNo2', file: '/3/KaijuNo2.mp4' }],
-  };
 
   return (
     <main className='pt-20 p-2 min-h-svh h-full w-full'>
@@ -81,9 +109,13 @@ const HomePage = () => {
             <Plyr {...plyrProps} />
           </div>
           <div className='w-full p-2 flex items-center justify-evenly gap-2 mt-2 rounded-lg bg-black/20'>
-            <button className='btn btn-ghost h-fit min-h-fit p-1 text-white/80'>
+            <button
+              className={`btn btn-ghost h-fit min-h-fit p-1 text-white/80 ${isPreviousDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={handlePreviousEpisode} // Attach the handlePreviousEpisode function
+              disabled={isPreviousDisabled} // Disable button if there is no previous episode
+            >
               <IoIosArrowBack size="24" />
-              <h1 className='hidden sm:block'>Previous</h1>
+              <h1 className='hidden sm:block pr-2'>Previous</h1>
             </button>
             <div className='flex items-center justify-center gap-8'>
               <button
@@ -101,8 +133,12 @@ const HomePage = () => {
                 <h1 className='hidden sm:block'>Dislike</h1>
               </button>
             </div>
-            <button className='btn btn-ghost h-fit min-h-fit p-1 text-white/80'>
-              <h1 className='hidden sm:block'>Next</h1>
+            <button
+              className={`btn btn-ghost h-fit min-h-fit p-1 text-white/80 ${isNextDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={handleNextEpisode} // Attach the handleNextEpisode function
+              disabled={isNextDisabled} // Disable button if there is no next episode
+            >
+              <h1 className='hidden sm:block pl-2'>Next</h1>
               <IoIosArrowForward size="24" />
             </button>
           </div>
