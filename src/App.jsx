@@ -5,6 +5,7 @@ import UploadPage from "./Pages/Upload/UploadPage.jsx";
 import PlayerPage from "./Pages/Player/PlayerPage.jsx";
 import ContactPage from "./Pages/Contact/ContactPage.jsx";
 import NavBar from './Components/NavBar.jsx';
+import Footer from './Components/Footer.jsx';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/player" element={<PlayerPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Routes>
+      <Footer />
     </BrowserRouter>
     </>
   );

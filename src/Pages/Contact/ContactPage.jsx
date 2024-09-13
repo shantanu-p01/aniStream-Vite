@@ -7,7 +7,7 @@ const ContactPage = () => {
   };
 
   return (
-    <main className='pt-20 p-4 min-h-screen text-white'>
+    <main className='pt-28 p-4 min-h-fit text-white'>
       <div className='flex flex-col lg:flex-row justify-evenly items-center lg:items-start gap-8 max-w-5xl mx-auto p-6 bg-black/20 rounded-lg shadow-lg'>
         
         {/* Shantanu's Profile */}
