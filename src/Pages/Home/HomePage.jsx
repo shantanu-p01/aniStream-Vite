@@ -7,7 +7,7 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 // Reusable component for a button (Season/Episode)
 const Button = ({ isActive, onClick, children, disabled }) => (
   <button
-    className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition duration-300 ${isActive ? 'bg-white/20' : 'bg-black/20'} text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/20 transition duration-300 ${isActive ? 'bg-white/20' : 'bg-black/20'} text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     onClick={onClick}
     disabled={disabled}
   >
