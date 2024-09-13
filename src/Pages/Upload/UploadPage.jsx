@@ -13,6 +13,8 @@ const UploadPage = () => {
   const [missingFields, setMissingFields] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false); // State for loader
 
   const handleFileChange = (e, setFile, isVideo = false) => {
     const file = e.target.files[0];
@@ -40,11 +42,27 @@ const UploadPage = () => {
       setShowModal(true);
     } else if (!episodeName || !description) {
       setModalMessage('The optional fields are not filled. Do you want to continue?');
-      setShowConfirmation(true);
+      setShowConfirmation(true); // Show confirmation modal
     } else {
-      // Perform upload logic here (e.g., API call)
-      clearFields();
+      // Perform upload logic for all fields being filled
+      showLoaderAndSuccess();
     }
+  };
+
+  const handleConfirmUpload = () => {
+    // Show loader first, then show success modal after 2 seconds
+    showLoaderAndSuccess();
+  };
+
+  const showLoaderAndSuccess = () => {
+    setLoading(true); // Show loader
+    setShowConfirmation(false); // Hide confirmation modal
+    setTimeout(() => {
+      clearFields();
+      setLoading(false); // Hide loader
+      setModalMessage('Success! Episode uploaded successfully.');
+      setShowSuccessModal(true); // Show success modal
+    }, 2000); // 2-second delay before showing the success message
   };
 
   const clearFields = () => {
@@ -133,11 +151,11 @@ const UploadPage = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#242424] p-6 rounded-lg shadow-lg min-w-[300px]">
-            <h1 className='relative -top-4 text-2xl font-semibold -left-2'>Message</h1>
-            <p>{modalMessage}</p>
+          <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
+            <h1 className='relative text-2xl font-semibold'>Message</h1>
+            <p className='mt-2 pl-2'>{modalMessage}</p>
             {missingFields.length > 0 && (
-              <ul className='list-disc list-inside mt-2'>
+              <ul className='list-disc list-inside mt-2 pl-4'>
                 {missingFields.map((field, index) => <li key={index} className='text-white'>{field}</li>)}
               </ul>
             )}
@@ -151,12 +169,35 @@ const UploadPage = () => {
       {/* Confirmation Modal */}
       {showConfirmation && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#242424] p-6 rounded-lg shadow-lg min-w-[300px]">
-            <h1 className='relative -top-4 text-2xl font-semibold -left-2'>Confirmation</h1>
-            <p>{modalMessage}</p>
-            <div className='flex items-center justify-end top-2 left-2 relative gap-2'>
-              <button onClick={() => { setShowConfirmation(false); clearFields(); }} className="mt-4 btn btn-success text-white font-bold py-2 px-4 rounded-lg">Yes</button>
-              <button onClick={() => setShowConfirmation(false)} className="mt-4 btn btn-error text-white font-bold py-2 px-4 rounded-lg">No</button>
+          <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
+            <h1 className='relative text-2xl font-semibold'>Confirmation</h1>
+            <p className='mt-2 pl-2'>{modalMessage}</p>
+            <div className='flex items-center justify-end gap-4 mt-4'>
+              <button onClick={handleConfirmUpload} className="btn btn-info text-white font-bold py-2 px-4 rounded-lg">Confirm</button>
+              <button onClick={() => setShowConfirmation(false)} className="btn btn-error text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
+            <h1 className='relative text-2xl font-semibold'>Success</h1>
+            <p className='mt-2 pl-2'>{modalMessage}</p>
+            <div className='flex items-center justify-end'>
+              <button onClick={() => setShowSuccessModal(false)} className="mt-4 btn btn-info text-white font-bold py-2 px-4 rounded-lg">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loader */}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="flex flex-col items-center justify-center">
+            <div className="loader"> <span className="loading loading-dots loading-md"></span>
             </div>
           </div>
         </div>
