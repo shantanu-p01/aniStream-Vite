@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
-import { IoClose } from "react-icons/io5";
+import React, { useState, useEffect } from 'react';
+import { BiSolidTrash } from "react-icons/bi";
 
 const UploadPage = () => {
   const [thumbnail, setThumbnail] = useState(null);
   const [video, setVideo] = useState(null);
   const [animeName, setAnimeName] = useState('');
+  const [episodeName, setEpisodeName] = useState('');
   const [episodeNumber, setEpisodeNumber] = useState('');
   const [description, setDescription] = useState('');
+  const [isUploadEnabled, setIsUploadEnabled] = useState(false);
+
+  useEffect(() => {
+    // Enable the Upload button only if all required fields are filled
+    setIsUploadEnabled(animeName && episodeNumber && thumbnail && video);
+  }, [animeName, episodeNumber, thumbnail, video]);
 
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
@@ -42,6 +49,30 @@ const UploadPage = () => {
     }
   };
 
+  const clearFields = () => {
+    // Clear all fields
+    setThumbnail(null);
+    setVideo(null);
+    setAnimeName('');
+    setEpisodeName('');
+    setEpisodeNumber('');
+    setDescription('');
+  };
+
+  const handleUpload = () => {
+    if (isUploadEnabled) {
+      // Perform upload logic here
+
+      // Clear fields after upload
+      clearFields();
+    }
+  };
+
+  const handleDiscard = () => {
+    // Clear fields on discard
+    clearFields();
+  };
+
   return (
     <main className='pt-20 p-2 min-h-screen h-full w-full'>
       <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
@@ -49,9 +80,19 @@ const UploadPage = () => {
         <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-6'>
           {/* Thumbnail Upload Section */}
           <div className='flex-1 flex flex-col items-center justify-center'>
-            <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Upload Thumbnail</h2>
+            <div className='flex justify-between items-center w-full lg:max-w-md min-w-[250px] mb-2'>
+              <h2 className='text-white text-lg font-bold text-center lg:text-left'>Upload Thumbnail</h2>
+              {thumbnail && (
+                <button
+                  onClick={() => removeFile('thumbnail')}
+                  className='btn btn-ghost min-h-fit h-fit p-2 text-red-500 text-2xl'
+                >
+                  <BiSolidTrash size="24" />
+                </button>
+              )}
+            </div>
             <div
-              className='relative w-full lg:max-w-md min-w-[300px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center cursor-pointer group'
+              className='relative w-full lg:max-w-md min-w-[250px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center cursor-pointer group'
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, setThumbnail)}
             >
@@ -72,29 +113,30 @@ const UploadPage = () => {
                   </label>
                 </>
               ) : (
-                <>
-                  <img
-                    src={URL.createObjectURL(thumbnail)}
-                    alt='Thumbnail'
-                    className='object-cover h-full w-full'
-                  />
-                  {/* Cross Symbol for Removing Thumbnail */}
-                  <button
-                    onClick={() => removeFile('thumbnail')}
-                    className='absolute inset-0 flex items-center justify-center text-2xl text-red-500 opacity-0 group-hover:opacity-100 bg-black/70 transition duration-500'
-                  >
-                    <IoClose size="44"/>
-                  </button>
-                </>
+                <img
+                  src={URL.createObjectURL(thumbnail)}
+                  alt='Thumbnail'
+                  className='object-cover h-full w-full'
+                />
               )}
             </div>
           </div>
 
           {/* Video Upload Section */}
           <div className='flex-1 flex flex-col items-center justify-center'>
-            <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Upload Video</h2>
+            <div className='flex justify-between items-center w-full lg:max-w-md min-w-[250px] mb-2'>
+              <h2 className='text-white text-lg font-bold text-center lg:text-left'>Upload Video</h2>
+              {video && (
+                <button
+                  onClick={() => removeFile('video')}
+                  className='btn btn-ghost min-h-fit h-fit p-2 text-red-500 text-2xl'
+                >
+                  <BiSolidTrash size="24" />
+                </button>
+              )}
+            </div>
             <div
-              className='relative w-full lg:max-w-md min-w-[300px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center cursor-pointer group'
+              className='relative w-full lg:max-w-md min-w-[250px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center cursor-pointer group'
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, setVideo)}
             >
@@ -115,20 +157,11 @@ const UploadPage = () => {
                   </label>
                 </>
               ) : (
-                <>
-                  <video
-                    src={URL.createObjectURL(video)}
-                    controls
-                    className='object-cover h-full w-full'
-                  />
-                  {/* Cross Symbol for Removing Video */}
-                  <button
-                    onClick={() => removeFile('video')}
-                    className='absolute inset-0 flex items-center justify-center text-2xl text-red-500 opacity-0 group-hover:opacity-100 bg-black/70 transition duration-500'
-                  >
-                    <IoClose size="44"/>
-                  </button>
-                </>
+                <video
+                  src={URL.createObjectURL(video)}
+                  controls
+                  className='object-cover h-full w-full'
+                />
               )}
             </div>
           </div>
@@ -146,6 +179,19 @@ const UploadPage = () => {
                 type='text'
                 value={animeName}
                 onChange={(e) => setAnimeName(e.target.value)}
+                className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+              />
+            </div>
+
+            {/* Episode Name Input Field */}
+            <div className='mb-4'>
+              <label className='block text-white text-sm font-bold mb-2'>
+                Episode Name (Optional)
+              </label>
+              <input
+                type='text'
+                value={episodeName}
+                onChange={(e) => setEpisodeName(e.target.value)}
                 className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
               />
             </div>
@@ -174,9 +220,21 @@ const UploadPage = () => {
               />
             </div>
 
-            <button className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg'>
-              Upload
-            </button>
+            <div className='flex flex-row items-center gap-2'>
+              <button
+                className={`btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg ${!isUploadEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={handleUpload}
+                disabled={!isUploadEnabled}
+              >
+                Upload
+              </button>
+              <button
+                className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg'
+                onClick={handleDiscard}
+              >
+                Discard
+              </button>
+            </div>
           </div>
         </div>
       </div>
