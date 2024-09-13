@@ -119,6 +119,7 @@ const NavBar = () => {
     // Move the highlight to the active button on initial render or location change
     const activeButtonIndex = {
       '/': 0,
+      '/player': 0, // Add /player to the home button
       '/upload': 1,
       '/contact': 2
     }[location.pathname];
