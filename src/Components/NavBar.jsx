@@ -110,6 +110,7 @@ const NavBar = () => {
   // Handle button clicks to navigate
   const handleNavigation = (path, buttonRef) => {
     navigate(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to the top of the page smoothly
     if (isDrawerOpen) {
       toggleDrawer(); // Close drawer if open
     }
@@ -128,6 +129,18 @@ const NavBar = () => {
       setTimeout(() => moveHighlight(buttonRefs.current[activeButtonIndex]), 0); // Delay to allow for rendering
     }
   }, [location.pathname]);
+
+    // Effect to handle body scroll lock when drawer is open
+  useEffect(() => {
+    if (isDrawerOpen) {
+      document.body.style.overflow = 'hidden'; // Prevent scrolling
+    } else {
+      document.body.style.overflow = ''; // Restore scrolling
+    }
+    return () => {
+      document.body.style.overflow = ''; // Clean up when component unmounts or drawer closes
+    };
+  }, [isDrawerOpen]);
 
   return (
     <header className='z-30 w-screen h-16 px-2 flex items-center justify-center fixed select-none'>

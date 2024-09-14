@@ -3,6 +3,7 @@ import { BiSolidTrash } from "react-icons/bi";
 
 const UploadPage = () => {
   const [thumbnail, setThumbnail] = useState(null);
+  const [poster, setPoster] = useState(null); // State for poster
   const [video, setVideo] = useState(null);
   const [videoURL, setVideoURL] = useState('');
   const [animeName, setAnimeName] = useState('');
@@ -67,6 +68,7 @@ const UploadPage = () => {
 
   const clearFields = () => {
     setThumbnail(null);
+    setPoster(null); // Clear poster
     setVideo(null);
     setVideoURL('');
     setAnimeName('');
@@ -76,7 +78,7 @@ const UploadPage = () => {
   };
 
   const handleDiscard = () => {
-    if (!animeName && !episodeName && !episodeNumber && !description && !thumbnail && !video) {
+    if (!animeName && !episodeName && !episodeNumber && !description && !thumbnail && !poster && !video) {
       setModalMessage('All fields are already empty');
       setShowModal(true);
     } else {
@@ -86,7 +88,7 @@ const UploadPage = () => {
 
   const renderUploadSection = (label, file, setFile, accept, isVideo = false) => (
     <div className='flex-1 flex flex-col items-center justify-center'>
-      <div className='flex justify-between items-center w-full lg:max-w-md min-w-[250px] mb-2'>
+      <div className='flex justify-between items-center w-full lg:max-w-md min-w-[200px] mb-2'>
         <h2 className='text-white text-lg font-bold text-center lg:text-left'>{`Upload ${label}`}</h2>
         {file && (
           <button onClick={() => { setFile(null); if (isVideo) setVideoURL(''); }} className='btn btn-ghost min-h-fit h-fit p-2 text-red-500 text-2xl'>
@@ -95,14 +97,14 @@ const UploadPage = () => {
         )}
       </div>
       <div
-        className='relative w-full lg:max-w-md min-w-[250px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center cursor-pointer group'
+        className='relative w-full lg:max-w-md min-w-[200px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center cursor-pointer group'
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, setFile, isVideo)}
       >
         {!file ? (
           <>
             <input type='file' accept={accept} className='hidden' id={`${label.toLowerCase()}-upload`} onChange={(e) => handleFileChange(e, setFile, isVideo)} />
-            <label htmlFor={`${label.toLowerCase()}-upload`} className='w-full h-full flex items-center justify-center text-white cursor-pointer'>
+            <label htmlFor={`${label.toLowerCase()}-upload`} className='w-full text-center h-full flex items-center justify-center text-white cursor-pointer'>
               {`Drag & Drop ${label} or Click to Upload`}
             </label>
           </>
@@ -116,16 +118,20 @@ const UploadPage = () => {
   );
 
   return (
-    <main className='pt-28 mb-5 p-2 min-h-fit h-full w-full'>
+    <main className='pt-28 p-2 min-h-screen h-full w-full'>
       <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
-        <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-6'>
-          {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
+        <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
+          <div className='w-full flex flex-col md:flex-row gap-4'>
+            {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
+            {renderUploadSection('Poster (Optional)', poster, setPoster, 'image/*')} {/* Added poster input */}
+
+          </div>
           {renderUploadSection('Video', video, setVideo, 'video/*', true)}
         </div>
         <div className='w-full lg:w-1/2 flex flex-col gap-4 flex-1'>
           <div className='bg-black/20 p-4 rounded-lg flex-1'>
             <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Episode Details</h2>
-            {[
+            {[ 
               { label: 'Anime Name', value: animeName, onChange: setAnimeName },
               { label: 'Episode Name (Optional)', value: episodeName, onChange: setEpisodeName },
               { label: 'Episode Number', value: episodeNumber, onChange: setEpisodeNumber },
@@ -156,11 +162,13 @@ const UploadPage = () => {
             <p className='mt-2 pl-2'>{modalMessage}</p>
             {missingFields.length > 0 && (
               <ul className='list-disc list-inside mt-2 pl-4'>
-                {missingFields.map((field, index) => <li key={index} className='text-white'>{field}</li>)}
+                {missingFields.map((field, index) => (
+                  <li key={index}>{field}</li>
+                ))}
               </ul>
             )}
-            <div className='flex items-center justify-end top-2 left-2 relative'>
-              <button onClick={() => setShowModal(false)} className="mt-4 btn btn-error text-white font-bold py-2 px-4 rounded-lg">Close</button>
+            <div className='flex justify-center gap-4 mt-4'>
+              <button onClick={() => setShowModal(false)} className='btn btn-primary w-1/2'>OK</button>
             </div>
           </div>
         </div>
@@ -172,9 +180,9 @@ const UploadPage = () => {
           <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
             <h1 className='relative text-2xl font-semibold'>Confirmation</h1>
             <p className='mt-2 pl-2'>{modalMessage}</p>
-            <div className='flex items-center justify-end gap-4 mt-4'>
-              <button onClick={handleConfirmUpload} className="btn btn-info text-white font-bold py-2 px-4 rounded-lg">Confirm</button>
-              <button onClick={() => setShowConfirmation(false)} className="btn btn-error text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+            <div className='flex justify-center gap-4 mt-4'>
+              <button onClick={handleConfirmUpload} className='btn btn-primary w-1/2'>Yes</button>
+              <button onClick={() => setShowConfirmation(false)} className='btn btn-secondary w-1/2'>No</button>
             </div>
           </div>
         </div>
@@ -186,8 +194,8 @@ const UploadPage = () => {
           <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
             <h1 className='relative text-2xl font-semibold'>Success</h1>
             <p className='mt-2 pl-2'>{modalMessage}</p>
-            <div className='flex items-center justify-end'>
-              <button onClick={() => setShowSuccessModal(false)} className="mt-4 btn btn-info text-white font-bold py-2 px-4 rounded-lg">Close</button>
+            <div className='flex justify-center gap-4 mt-4'>
+              <button onClick={() => setShowSuccessModal(false)} className='btn btn-primary w-1/2'>OK</button>
             </div>
           </div>
         </div>
