@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Plyr from 'plyr-react';
 import 'plyr-react/plyr.css';
 import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Reusable component for a button (Season/Episode)
 const Button = ({ isActive, onClick, children, disabled }) => (
@@ -20,7 +20,19 @@ const PlayerPage = () => {
   const [videoSrc, setVideoSrc] = useState('/1/DeathNote1.mp4');
   const [activeEpisode, setActiveEpisode] = useState('DeathNote1');
   const [likeStatuses, setLikeStatuses] = useState({});
-  const [activeSeason, setActiveSeason] = useState(1); // State for active season button
+  const [activeSeason, setActiveSeason] = useState(1);
+  const [animeName, setAnimeName] = useState('');
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const anime = searchParams.get('anime');
+    if (anime) {
+      setAnimeName(decodeURIComponent(anime));
+    }
+  }, [location]);
 
   // Episodes list based on active season
   const episodes = {
@@ -72,6 +84,21 @@ const PlayerPage = () => {
     }
   };
 
+  // Detect when video finishes to automatically play the next episode
+  useEffect(() => {
+    const player = document.querySelector('.plyr');
+
+    if (player) {
+      player.addEventListener('ended', handleNextEpisode);
+    }
+
+    return () => {
+      if (player) {
+        player.removeEventListener('ended', handleNextEpisode);
+      }
+    };
+  }, [videoSrc]);
+
   // Determine if next/previous buttons should be disabled
   const currentEpisodes = episodes[activeSeason];
   const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
@@ -94,16 +121,15 @@ const PlayerPage = () => {
       controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
       ratio: '16:9',
       keyboard: {
-        global: true, // Enables keyboard controls for the video player
+        global: true,
       },
     },
   }), [videoSrc]);
 
   const currentLikeStatus = likeStatuses[activeEpisode] || null;
-  const navigate = useNavigate();
 
   const handleBackClick = () => {
-    navigate('/'); // This will navigate you to the home path
+    navigate('/');
   };
   
   return (
@@ -111,23 +137,23 @@ const PlayerPage = () => {
       <div className='flex flex-col lg:flex-row items-center lg:items-start gap-2 max-w-7xl mx-auto p-2 bg-black/20 rounded-lg'>
         {/* Video Player */}
         <div className='w-full lg:w-2/3'>
-        <div className='w-full py-2 flex flex-row items-center justify-start gap-2'>
-      <button 
-        className='btn btn-ghost transition duration-300 min-h-fit h-fit p-1 bg-white/20 hover:bg-white/30'
-        onClick={handleBackClick}
-      >
-        <IoIosArrowBack size="24" />
-      </button>
-      <h1 className='text-xl font-semibold'>Anime Name - Episode (Number)</h1>
-    </div>
+          <div className='w-full pb-2 flex flex-row items-center justify-start gap-2'>
+            <button 
+              className='btn btn-ghost transition duration-300 min-h-fit h-fit p-1 bg-white/20 hover:bg-white/30'
+              onClick={handleBackClick}
+            >
+              <IoIosArrowBack size="24" />
+            </button>
+            <h1 className='text-xl font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
+          </div>
           <div className='aspect-w-16 overflow-hidden rounded-lg aspect-h-9'>
             <Plyr {...plyrProps} />
           </div>
           <div className='w-full p-2 flex items-center justify-evenly gap-2 mt-2 rounded-lg bg-black/20'>
             <button
               className={`btn btn-ghost h-fit min-h-fit p-1 text-white/80 ${isPreviousDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={handlePreviousEpisode} // Attach the handlePreviousEpisode function
-              disabled={isPreviousDisabled} // Disable button if there is no previous episode
+              onClick={handlePreviousEpisode}
+              disabled={isPreviousDisabled}
             >
               <IoIosArrowBack size="24" />
               <h1 className='hidden sm:block pr-2'>Previous</h1>
@@ -150,8 +176,8 @@ const PlayerPage = () => {
             </div>
             <button
               className={`btn btn-ghost h-fit min-h-fit p-1 text-white/80 ${isNextDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={handleNextEpisode} // Attach the handleNextEpisode function
-              disabled={isNextDisabled} // Disable button if there is no next episode
+              onClick={handleNextEpisode}
+              disabled={isNextDisabled}
             >
               <h1 className='hidden sm:block pl-2'>Next</h1>
               <IoIosArrowForward size="24" />
@@ -174,7 +200,7 @@ const PlayerPage = () => {
           {/* Episode Buttons */}
           <div className='flex flex-wrap justify-start items-center gap-2 p-2'>
             {episodes[activeSeason].map(({ episode, file }, index) => (
-              <Button key={index} isActive={activeEpisode === episode} onClick={() => handleEpisodeChange(episode, file)}>
+              <Button key={index} isActive={episode === activeEpisode} onClick={() => handleEpisodeChange(episode, file)}>
                 {index + 1}
               </Button>
             ))}
