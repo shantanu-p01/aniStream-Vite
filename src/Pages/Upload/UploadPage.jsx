@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BiSolidTrash } from "react-icons/bi";
 
 const UploadPage = () => {
@@ -16,6 +16,22 @@ const UploadPage = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false); // State for loader
+  const [isLoading, setIsLoading] = useState(true); // Loader state
+
+  // Simulate loading for 1 second when routed
+  useEffect(() => {
+    // Disable scrolling when loading
+    document.body.style.overflow = isLoading ? 'hidden' : 'auto';
+
+    const timer = setTimeout(() => {
+      setIsLoading(false); // Hide loader after 1 second
+    }, 500);
+
+    return () => {
+      clearTimeout(timer); // Clean up the timer
+      document.body.style.overflow = 'auto'; // Ensure scrolling is re-enabled after unmount
+    };
+  }, [isLoading]);
 
   const handleFileChange = (e, setFile, isVideo = false) => {
     const file = e.target.files[0];
@@ -118,99 +134,107 @@ const UploadPage = () => {
   );
 
   return (
-    <main className='pt-28 p-2 min-h-screen h-full w-full'>
-      <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
-        <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
-          <div className='w-full flex flex-col md:flex-row gap-4'>
-            {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
-            {renderUploadSection('Poster (Optional)', poster, setPoster, 'image/*')} {/* Added poster input */}
-
-          </div>
-          {renderUploadSection('Video', video, setVideo, 'video/*', true)}
-        </div>
-        <div className='w-full lg:w-1/2 flex flex-col gap-4 flex-1'>
-          <div className='bg-black/20 p-4 rounded-lg flex-1'>
-            <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Episode Details</h2>
-            {[ 
-              { label: 'Anime Name', value: animeName, onChange: setAnimeName },
-              { label: 'Episode Name (Optional)', value: episodeName, onChange: setEpisodeName },
-              { label: 'Episode Number', value: episodeNumber, onChange: setEpisodeNumber },
-              { label: 'Description (Optional)', value: description, onChange: setDescription, isTextarea: true },
-            ].map(({ label, value, onChange, isTextarea }) => (
-              <div className='mb-4' key={label}>
-                <label className='block text-white text-sm font-bold mb-2'>{label}</label>
-                {isTextarea ? (
-                  <textarea value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' rows='4' />
-                ) : (
-                  <input type='text' value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' />
-                )}
-              </div>
-            ))}
-            <div className='flex flex-row items-center gap-2'>
-              <button onClick={handleUpload} className='btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg'>Upload</button>
-              <button onClick={handleDiscard} className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg'>Discard</button>
-            </div>
-          </div>
-        </div>
+    <>
+      {isLoading ? ( // Show loader while loading
+      <div className="flex justify-center items-center min-h-svh">
+        <span className="loading loading-dots loading-md"></span>
       </div>
+      ) : (
+      <main className='pt-28 p-2 min-h-screen h-full w-full'>
+        <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
+          <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
+            <div className='w-full flex flex-col md:flex-row gap-4'>
+              {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
+              {renderUploadSection('Poster (Optional)', poster, setPoster, 'image/*')} {/* Added poster input */}
 
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
-            <h1 className='relative text-2xl font-semibold'>Message</h1>
-            <p className='mt-2 pl-2'>{modalMessage}</p>
-            {missingFields.length > 0 && (
-              <ul className='list-disc list-inside mt-2 pl-4'>
-                {missingFields.map((field, index) => (
-                  <li key={index}>{field}</li>
-                ))}
-              </ul>
-            )}
-            <div className='flex justify-center gap-4 mt-4'>
-              <button onClick={() => setShowModal(false)} className='btn btn-primary w-1/2'>OK</button>
+            </div>
+            {renderUploadSection('Video', video, setVideo, 'video/*', true)}
+          </div>
+          <div className='w-full lg:w-1/2 flex flex-col gap-4 flex-1'>
+            <div className='bg-black/20 p-4 rounded-lg flex-1'>
+              <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Episode Details</h2>
+              {[ 
+                { label: 'Anime Name', value: animeName, onChange: setAnimeName },
+                { label: 'Episode Name (Optional)', value: episodeName, onChange: setEpisodeName },
+                { label: 'Episode Number', value: episodeNumber, onChange: setEpisodeNumber },
+                { label: 'Description (Optional)', value: description, onChange: setDescription, isTextarea: true },
+              ].map(({ label, value, onChange, isTextarea }) => (
+                <div className='mb-4' key={label}>
+                  <label className='block text-white text-sm font-bold mb-2'>{label}</label>
+                  {isTextarea ? (
+                    <textarea value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' rows='4' />
+                  ) : (
+                    <input type='text' value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' />
+                  )}
+                </div>
+              ))}
+              <div className='flex flex-row items-center gap-2'>
+                <button onClick={handleUpload} className='btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg'>Upload</button>
+                <button onClick={handleDiscard} className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg'>Discard</button>
+              </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Confirmation Modal */}
-      {showConfirmation && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
-            <h1 className='relative text-2xl font-semibold'>Confirmation</h1>
-            <p className='mt-2 pl-2'>{modalMessage}</p>
-            <div className='flex justify-center gap-4 mt-4'>
-              <button onClick={handleConfirmUpload} className='btn btn-primary w-1/2'>Yes</button>
-              <button onClick={() => setShowConfirmation(false)} className='btn btn-secondary w-1/2'>No</button>
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
+              <h1 className='relative text-2xl font-semibold'>Message</h1>
+              <p className='mt-2 pl-2'>{modalMessage}</p>
+              {missingFields.length > 0 && (
+                <ul className='list-disc list-inside mt-2 pl-4'>
+                  {missingFields.map((field, index) => (
+                    <li key={index}>{field}</li>
+                  ))}
+                </ul>
+              )}
+              <div className='flex justify-center gap-4 mt-4'>
+                <button onClick={() => setShowModal(false)} className='btn btn-primary w-1/2'>OK</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
-            <h1 className='relative text-2xl font-semibold'>Success</h1>
-            <p className='mt-2 pl-2'>{modalMessage}</p>
-            <div className='flex justify-center gap-4 mt-4'>
-              <button onClick={() => setShowSuccessModal(false)} className='btn btn-primary w-1/2'>OK</button>
+        {/* Confirmation Modal */}
+        {showConfirmation && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
+              <h1 className='relative text-2xl font-semibold'>Confirmation</h1>
+              <p className='mt-2 pl-2'>{modalMessage}</p>
+              <div className='flex justify-center gap-4 mt-4'>
+                <button onClick={handleConfirmUpload} className='btn btn-primary w-1/2'>Yes</button>
+                <button onClick={() => setShowConfirmation(false)} className='btn btn-secondary w-1/2'>No</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Loader */}
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="flex flex-col items-center justify-center">
-            <div className="loader"> <span className="loading loading-dots loading-md"></span>
+        {/* Success Modal */}
+        {showSuccessModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
+              <h1 className='relative text-2xl font-semibold'>Success</h1>
+              <p className='mt-2 pl-2'>{modalMessage}</p>
+              <div className='flex justify-center gap-4 mt-4'>
+                <button onClick={() => setShowSuccessModal(false)} className='btn btn-primary w-1/2'>OK</button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Loader */}
+        {loading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="flex flex-col items-center justify-center">
+              <div className="loader"> <span className="loading loading-dots loading-md"></span>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
       )}
-    </main>
+    </>
   );
 };
 

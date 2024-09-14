@@ -17,15 +17,33 @@ const HomePage = () => {
   const heroRef = useRef(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [scrollState, setScrollState] = useState({ canScrollBack: false, canScrollForward: true });
+  const [isLoading, setIsLoading] = useState(true); // Loader state
+
+  // Simulate loading for 1 second when routed
+  useEffect(() => {
+    // Disable scrolling when loading
+    document.body.style.overflow = isLoading ? 'hidden' : 'auto';
+
+    const timer = setTimeout(() => {
+      setIsLoading(false); // Hide loader after 1 second
+    }, 500);
+
+    return () => {
+      clearTimeout(timer); // Clean up the timer
+      document.body.style.overflow = 'auto'; // Ensure scrolling is re-enabled after unmount
+    };
+  }, [isLoading]);
 
   const handleScroll = (amount) => scrollContainerRef.current?.scrollBy({ left: amount, behavior: 'smooth' });
 
   const updateScrollState = () => {
-    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-    setScrollState({
-      canScrollBack: scrollLeft > 5,
-      canScrollForward: scrollLeft + clientWidth < scrollWidth - 5,
-    });
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setScrollState({
+        canScrollBack: scrollLeft > 5,
+        canScrollForward: scrollLeft + clientWidth < scrollWidth - 5,
+      });
+    }
   };
 
   useEffect(() => {
@@ -45,52 +63,60 @@ const HomePage = () => {
   }, []);
 
   return (
-    <main className="pt-28 mb-5 p-2 min-h-screen">
-      {/* Hero Section */}
-      <div
-        ref={heroRef}
-        className="hero h-[250px] md:h-[500px] max-w-7xl mx-auto rounded-lg bg-cover bg-center relative mb-8"
-        style={{ backgroundImage: `url(${animeCards[currentHeroIndex].heroImage})` }}
-      >
-        <div className="hero-overlay absolute inset-0 bg-opacity-60 rounded-lg" />
-        <div className="hero-content absolute bottom-0 left-0 p-6 pl-3 pb-3 text-white/70">
-          <h1 className="text-4xl md:text-5xl font-bold truncate">{animeCards[currentHeroIndex].title}</h1>
-        </div>
+    <>
+      {isLoading ? ( // Show loader while loading
+      <div className="flex justify-center items-center min-h-svh">
+        <span className="loading loading-dots loading-md"></span>
       </div>
-
-      {/* Popular Anime Section */}
-      <div className="max-w-7xl mx-auto p-4 bg-black/20 rounded-lg">
-        <header className="flex justify-between pb-2">
-          <h2 className="text-2xl font-bold text-white">Popular Anime</h2>
-          <div className="flex gap-2">
-            {[{ dir: -175, icon: <IoIosArrowBack size="24" /> }, { dir: 175, icon: <IoIosArrowForward size="24" /> }].map(
-              ({ dir, icon }, idx) => (
-                <button
-                  key={idx}
-                  className="btn btn-ghost h-fit min-h-fit bg-black/20 hover:bg-black/30 p-1"
-                  onClick={() => handleScroll(dir)}
-                  disabled={idx === 0 ? !scrollState.canScrollBack : !scrollState.canScrollForward}
-                >
-                  {icon}
-                </button>
-              )
-            )}
+      ) : (    
+      <main className="pt-28 mb-5 p-2 min-h-screen">
+        {/* Hero Section */}
+        <div
+          ref={heroRef}
+          className="hero h-[250px] md:h-[500px] max-w-7xl mx-auto rounded-lg bg-cover bg-center relative mb-8"
+          style={{ backgroundImage: `url(${animeCards[currentHeroIndex].heroImage})` }}
+        >
+          <div className="hero-overlay absolute inset-0 bg-opacity-60 rounded-lg" />
+          <div className="hero-content absolute bottom-0 left-0 p-6 pl-3 pb-3 text-white/70">
+            <h1 className="text-4xl md:text-5xl font-bold truncate">{animeCards[currentHeroIndex].title}</h1>
           </div>
-        </header>
-        <div ref={scrollContainerRef} className="flex overflow-x-auto gap-3 rounded-lg snap-x snap-mandatory scrollbar-hide">
-          {animeCards.map(({ title, poster }, index) => (
-            <a
-              key={index}
-              href={`/player?anime=${encodeURIComponent(title)}`}
-              className="flex-none w-[175px] snap-start bg-black/20 rounded-lg p-2 shadow-lg transition hover:bg-black/40"
-            >
-              <img draggable="false" className="w-full h-[225px] object-cover rounded-lg" src={poster} alt={`${title} Poster`} />
-              <h3 className="text-lg font-semibold text-white text-center truncate mt-2">{title}</h3>
-            </a>
-          ))}
         </div>
-      </div>
-    </main>
+
+        {/* Popular Anime Section */}
+        <div className="max-w-7xl mx-auto p-4 bg-black/20 rounded-lg">
+          <header className="flex justify-between pb-2">
+            <h2 className="text-2xl font-bold text-white">Popular Anime</h2>
+            <div className="flex gap-2">
+              {[{ dir: -175, icon: <IoIosArrowBack size="24" /> }, { dir: 175, icon: <IoIosArrowForward size="24" /> }].map(
+                ({ dir, icon }, idx) => (
+                  <button
+                    key={idx}
+                    className="btn btn-ghost h-fit min-h-fit bg-black/20 hover:bg-black/30 p-1"
+                    onClick={() => handleScroll(dir)}
+                    disabled={idx === 0 ? !scrollState.canScrollBack : !scrollState.canScrollForward}
+                  >
+                    {icon}
+                  </button>
+                )
+              )}
+            </div>
+          </header>
+          <div ref={scrollContainerRef} className="flex overflow-x-auto gap-3 rounded-lg snap-x snap-mandatory scrollbar-hide">
+            {animeCards.map(({ title, poster }, index) => (
+              <a
+                key={index}
+                href={`/player?anime=${encodeURIComponent(title)}`}
+                className="flex-none w-[175px] snap-start bg-black/20 rounded-lg p-2 shadow-lg transition hover:bg-black/40"
+              >
+                <img draggable="false" className="w-full h-[225px] object-cover rounded-lg" src={poster} alt={`${title} Poster`} />
+                <h3 className="text-lg font-semibold text-white text-center truncate mt-2">{title}</h3>
+              </a>
+            ))}
+          </div>
+        </div>
+      </main>
+      )}
+    </>
   );
 };
 
