@@ -40,7 +40,7 @@ const HomePage = () => {
   };
 
   return (
-    <main className="pt-28 p-2 min-h-screen">
+    <main className="pt-28 mb-5 p-2 min-h-screen">
       <div className="max-w-7xl mx-auto p-4 bg-black/20 rounded-lg">
         <header className="flex justify-between mb-4">
           <h2 className="text-2xl font-bold text-white">Popular Anime</h2>
