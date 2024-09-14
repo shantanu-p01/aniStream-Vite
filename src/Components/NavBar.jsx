@@ -134,9 +134,9 @@ const NavBar = () => {
       <nav className='bg-[#1a1818]/40 shadow-xl backdrop-blur-sm w-[85%] md:w-[50%] h-full flex items-center justify-between px-4 rounded-full mt-4 relative'>
         {/* leftLogo */}
         <div className='title left text-2xl flex items-center'>
-          <h1 className='text-white/80'>
+          <a href='/' className='text-white/80'>
             <span className='text-blue-500 font-semibold'>ani</span>Stream
-          </h1>
+          </a>
         </div>
         {/* centerTabs */}
         <div className='tabs hidden center lg:flex flex-row items-center justify-center gap-2 relative'>

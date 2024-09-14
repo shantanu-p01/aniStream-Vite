@@ -4,6 +4,7 @@ import 'plyr-react/plyr.css';
 import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useNavigate, useLocation } from 'react-router-dom';
+import { GoHomeFill } from "react-icons/go";
 
 // Reusable component for a button (Season/Episode)
 const Button = ({ isActive, onClick, children, disabled }) => (
@@ -164,9 +165,10 @@ const PlayerPage = () => {
                   className='btn btn-ghost transition duration-300 min-h-fit h-fit p-1 bg-white/20 hover:bg-white/30'
                   onClick={handleBackClick}
                 >
-                  <IoIosArrowBack size="24" />
+                  <GoHomeFill size="24" />
                 </button>
-                <h1 className='text-xl font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
+                <IoIosArrowForward className='min-h-fit h-fit' /> 
+                <h1 className='text-xl leading-[0] font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
               </div>
               <div className='aspect-w-16 overflow-hidden rounded-lg aspect-h-9'>
                 <Plyr {...plyrProps} />
