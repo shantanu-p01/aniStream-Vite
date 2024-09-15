@@ -176,52 +176,45 @@ const UploadPage = () => {
           </div>
         </div>
 
-        {/* Modal */}
-        {showModal && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
-              <h1 className='relative text-2xl font-semibold'>Message</h1>
-              <p className='mt-2 pl-2'>{modalMessage}</p>
-              {missingFields.length > 0 && (
-                <ul className='list-disc list-inside mt-2 pl-4'>
-                  {missingFields.map((field, index) => (
-                    <li key={index}>{field}</li>
-                  ))}
+          {/* Modal for missing fields */}
+          {showModal && (
+            <div className="modal modal-open">
+              <div className="modal-box">
+                <h3 className="font-bold text-lg">{modalMessage}</h3>
+                <ul className='list-disc list-inside mt-2'>
+                  {missingFields.map((field, idx) => <li key={idx}>{field}</li>)}
                 </ul>
-              )}
-              <div className='flex justify-center gap-4 mt-4'>
-                <button onClick={() => setShowModal(false)} className='btn btn-primary w-1/2'>OK</button>
+                <div className="modal-action">
+                  <button onClick={() => setShowModal(false)} className="btn">Okay</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Confirmation Modal */}
-        {showConfirmation && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
-              <h1 className='relative text-2xl font-semibold'>Confirmation</h1>
-              <p className='mt-2 pl-2'>{modalMessage}</p>
-              <div className='flex justify-center gap-4 mt-4'>
-                <button onClick={handleConfirmUpload} className='btn btn-primary w-1/2'>Yes</button>
-                <button onClick={() => setShowConfirmation(false)} className='btn btn-secondary w-1/2'>No</button>
+          {/* Confirmation modal */}
+          {showConfirmation && (
+            <div className="modal modal-open">
+              <div className="modal-box">
+                <h3 className="font-bold text-lg">{modalMessage}</h3>
+                <div className="modal-action">
+                  <button onClick={() => setShowConfirmation(false)} className="btn btn-error">Cancel</button>
+                  <button onClick={handleUpload} className="btn btn-success">Continue</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Success Modal */}
-        {showSuccessModal && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-[#242424] p-6 mx-3 rounded-lg shadow-lg min-w-[300px]">
-              <h1 className='relative text-2xl font-semibold'>Success</h1>
-              <p className='mt-2 pl-2'>{modalMessage}</p>
-              <div className='flex justify-center gap-4 mt-4'>
-                <button onClick={() => setShowSuccessModal(false)} className='btn btn-primary w-1/2'>OK</button>
+          {/* Success modal */}
+          {showSuccessModal && (
+            <div className="modal modal-open">
+              <div className="modal-box">
+                <h3 className="font-bold text-lg">{modalMessage}</h3>
+                <div className="modal-action">
+                  <button onClick={() => setShowSuccessModal(false)} className="btn">Close</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Loader */}
         {loading && (
