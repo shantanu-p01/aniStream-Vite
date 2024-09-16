@@ -198,7 +198,7 @@ const UploadPage = () => {
                 <h3 className="font-bold text-lg">{modalMessage}</h3>
                 <div className="modal-action">
                   <button onClick={() => setShowConfirmation(false)} className="btn btn-error">Cancel</button>
-                  <button onClick={handleUpload} className="btn btn-success">Continue</button>
+                  <button onClick={handleConfirmUpload} className="btn btn-success">Continue</button>
                 </div>
               </div>
             </div>
