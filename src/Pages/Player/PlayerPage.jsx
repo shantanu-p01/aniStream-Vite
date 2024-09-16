@@ -145,10 +145,6 @@ const PlayerPage = () => {
 
   const currentLikeStatus = likeStatuses[activeEpisode] || null;
 
-  const handleBackClick = () => {
-    navigate('/');
-  };
-
   return (
     <>
       {isLoading ? ( // Show loader while loading
@@ -161,12 +157,11 @@ const PlayerPage = () => {
             {/* Video Player */}
             <div className='w-full lg:w-2/3'>
               <div className='w-full pb-2 flex flex-row items-center justify-start gap-2'>
-                <button 
+                <a href='/'
                   className='btn btn-ghost transition duration-300 min-h-fit h-fit p-1 bg-white/20 hover:bg-white/30'
-                  onClick={handleBackClick}
                 >
                   <GoHomeFill size="24" />
-                </button>
+                </a>
                 <IoIosArrowForward className='min-h-fit h-fit' /> 
                 <h1 className='text-xl leading-[0] font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
               </div>
