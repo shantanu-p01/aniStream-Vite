@@ -59,6 +59,22 @@ const NavBar = () => {
     }
   }, [isModalOpen]);
 
+  // Disable body scroll when modal or drawer is open, and add mr-4 to body element
+  useEffect(() => {
+    if (isModalOpen || isDrawerOpen) {
+      document.body.style.overflow = 'hidden'; // Disable scrolling
+      document.body.classList.add('pr-4'); // Add margin-right
+    } else {
+      document.body.style.overflow = ''; // Enable scrolling
+      document.body.classList.remove('pr-4'); // Remove margin-right
+    }
+
+    return () => {
+      document.body.style.overflow = ''; // Clean up when modal or drawer closes
+      document.body.classList.remove('pr-4'); // Ensure margin-right is removed on cleanup
+    };
+  }, [isModalOpen, isDrawerOpen]);
+
   useEffect(() => {
     if (isModalOpen) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -129,18 +145,6 @@ const NavBar = () => {
       setTimeout(() => moveHighlight(buttonRefs.current[activeButtonIndex]), 0); // Delay to allow for rendering
     }
   }, [location.pathname]);
-
-    // Effect to handle body scroll lock when drawer is open
-  useEffect(() => {
-    if (isDrawerOpen) {
-      document.body.style.overflow = 'hidden'; // Prevent scrolling
-    } else {
-      document.body.style.overflow = ''; // Restore scrolling
-    }
-    return () => {
-      document.body.style.overflow = ''; // Clean up when component unmounts or drawer closes
-    };
-  }, [isDrawerOpen]);
 
   return (
     <header className='z-30 w-screen h-16 px-2 flex items-center justify-center fixed select-none'>
@@ -224,7 +228,7 @@ const NavBar = () => {
       {/* Search Modal */}
       <div 
         ref={modalRef}
-        className={`fixed inset-0 z-30 flex items-start justify-center px-4 bg-black/70 backdrop-blur-sm ${isModalOpen ? '' : 'pointer-events-none'}`}
+        className={`fixed inset-0 w-screen z-30 flex items-start justify-center px-4 bg-black/70 backdrop-blur-sm ${isModalOpen ? '' : 'pointer-events-none'}`}
         style={{ opacity: 0 }}
       >
         <div
