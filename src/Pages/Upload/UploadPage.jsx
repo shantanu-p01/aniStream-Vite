@@ -46,30 +46,67 @@ const UploadPage = () => {
     handleFileChange({ target: { files: e.dataTransfer.files } }, setFile, isVideo);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     const emptyFields = [];
     if (!animeName) emptyFields.push('Anime Name');
     if (!episodeNumber) emptyFields.push('Episode Number');
     if (!thumbnail) emptyFields.push('Thumbnail');
     if (!video) emptyFields.push('Video');
-
+  
     if (emptyFields.length) {
-      setModalMessage(emptyFields.length === 4 ? 'All required fields are empty.' : 'The following required fields are empty:');
+      setModalMessage(
+        emptyFields.length === 4
+          ? 'All required fields are empty.'
+          : 'The following required fields are empty:'
+      );
       setMissingFields(emptyFields.length === 4 ? [] : emptyFields);
       setShowModal(true);
     } else if (!episodeName || !description) {
-      setModalMessage('The optional fields are not filled. Do you want to continue?');
+      setModalMessage('Some optional fields are empty. Proceed?');
       setShowConfirmation(true); // Show confirmation modal
     } else {
-      // Perform upload logic for all fields being filled
-      showLoaderAndSuccess();
+      performUpload(); // Directly call upload function
     }
   };
-
+  
   const handleConfirmUpload = () => {
-    // Show loader first, then show success modal after 2 seconds
-    showLoaderAndSuccess();
+    setShowConfirmation(false); // Close confirmation modal
+    performUpload(); // Perform the upload after confirmation
   };
+  
+  const performUpload = async () => {
+    setLoading(true); // Show loader before starting the upload
+    try {
+      const formData = new FormData();
+      formData.append('animeName', animeName);
+      formData.append('episodeNumber', episodeNumber);
+      formData.append('thumbnail', thumbnail);
+      formData.append('video', video);
+  
+      if (episodeName) formData.append('episodeName', episodeName);
+      if (description) formData.append('description', description);
+      if (poster) formData.append('poster', poster);
+  
+      const response = await fetch('http://localhost:5000/upload', {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (response.ok) {
+        showLoaderAndSuccess(); // Handle success case
+      } else {
+        setModalMessage('Failed to upload files.');
+        setShowModal(true);
+      }
+    } catch (error) {
+      console.error(error);
+      setModalMessage('An error occurred while uploading.');
+      setShowModal(true);
+    } finally {
+      setLoading(false); // Always hide the loader after the upload completes
+    }
+  };  
+
 
   const showLoaderAndSuccess = () => {
     setLoading(true); // Show loader
