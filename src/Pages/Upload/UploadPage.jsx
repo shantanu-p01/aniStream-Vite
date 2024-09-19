@@ -3,11 +3,12 @@ import { BiSolidTrash } from "react-icons/bi";
 
 const UploadPage = () => {
   const [thumbnail, setThumbnail] = useState(null);
-  const [poster, setPoster] = useState(null); // State for poster
+  const [poster, setPoster] = useState(null);
   const [video, setVideo] = useState(null);
   const [videoURL, setVideoURL] = useState('');
   const [animeName, setAnimeName] = useState('');
   const [episodeName, setEpisodeName] = useState('');
+  const [seasonNumber, setSeasonNumber] = useState('');
   const [episodeNumber, setEpisodeNumber] = useState('');
   const [description, setDescription] = useState('');
   const [modalMessage, setModalMessage] = useState('');
@@ -15,21 +16,17 @@ const UploadPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [loading, setLoading] = useState(false); // State for loader
-  const [isLoading, setIsLoading] = useState(true); // Loader state
+  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate loading for 1 second when routed
   useEffect(() => {
-    // Disable scrolling when loading
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
-
     const timer = setTimeout(() => {
-      setIsLoading(false); // Hide loader after 1 second
+      setIsLoading(false);
     }, 500);
-
     return () => {
-      clearTimeout(timer); // Clean up the timer
-      document.body.style.overflow = 'auto'; // Ensure scrolling is re-enabled after unmount
+      clearTimeout(timer);
+      document.body.style.overflow = 'auto';
     };
   }, [isLoading]);
 
@@ -49,36 +46,38 @@ const UploadPage = () => {
   const handleUpload = async () => {
     const emptyFields = [];
     if (!animeName) emptyFields.push('Anime Name');
+    if (!seasonNumber) emptyFields.push('Season Number');
     if (!episodeNumber) emptyFields.push('Episode Number');
     if (!thumbnail) emptyFields.push('Thumbnail');
     if (!video) emptyFields.push('Video');
   
     if (emptyFields.length) {
       setModalMessage(
-        emptyFields.length === 4
+        emptyFields.length === 5
           ? 'All required fields are empty.'
           : 'The following required fields are empty:'
       );
-      setMissingFields(emptyFields.length === 4 ? [] : emptyFields);
+      setMissingFields(emptyFields.length === 5 ? [] : emptyFields);
       setShowModal(true);
     } else if (!episodeName || !description) {
       setModalMessage('Some optional fields are empty. Proceed?');
-      setShowConfirmation(true); // Show confirmation modal
+      setShowConfirmation(true);
     } else {
-      performUpload(); // Directly call upload function
+      performUpload();
     }
   };
   
   const handleConfirmUpload = () => {
-    setShowConfirmation(false); // Close confirmation modal
-    performUpload(); // Perform the upload after confirmation
+    setShowConfirmation(false);
+    performUpload();
   };
   
   const performUpload = async () => {
-    setLoading(true); // Show loader before starting the upload
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append('animeName', animeName);
+      formData.append('seasonNumber', seasonNumber);
       formData.append('episodeNumber', episodeNumber);
       formData.append('thumbnail', thumbnail);
       formData.append('video', video);
@@ -93,7 +92,7 @@ const UploadPage = () => {
       });
   
       if (response.ok) {
-        showLoaderAndSuccess(); // Handle success case
+        showLoaderAndSuccess();
       } else {
         setModalMessage('Failed to upload files.');
         setShowModal(true);
@@ -103,35 +102,35 @@ const UploadPage = () => {
       setModalMessage('An error occurred while uploading.');
       setShowModal(true);
     } finally {
-      setLoading(false); // Always hide the loader after the upload completes
+      setLoading(false);
     }
   };  
 
-
   const showLoaderAndSuccess = () => {
-    setLoading(true); // Show loader
-    setShowConfirmation(false); // Hide confirmation modal
+    setLoading(true);
+    setShowConfirmation(false);
     setTimeout(() => {
       clearFields();
-      setLoading(false); // Hide loader
+      setLoading(false);
       setModalMessage('Success! Episode uploaded successfully.');
-      setShowSuccessModal(true); // Show success modal
-    }, 2000); // 2-second delay before showing the success message
+      setShowSuccessModal(true);
+    }, 2000);
   };
 
   const clearFields = () => {
     setThumbnail(null);
-    setPoster(null); // Clear poster
+    setPoster(null);
     setVideo(null);
     setVideoURL('');
     setAnimeName('');
     setEpisodeName('');
+    setSeasonNumber('');
     setEpisodeNumber('');
     setDescription('');
   };
 
   const handleDiscard = () => {
-    if (!animeName && !episodeName && !episodeNumber && !description && !thumbnail && !poster && !video) {
+    if (!animeName && !episodeName && !seasonNumber && !episodeNumber && !description && !thumbnail && !poster && !video) {
       setModalMessage('All fields are already empty');
       setShowModal(true);
     } else {
@@ -172,7 +171,7 @@ const UploadPage = () => {
 
   return (
     <>
-      {isLoading ? ( // Show loader while loading
+      {isLoading ? (
       <div className="flex justify-center items-center min-h-svh">
         <span className="loading loading-dots loading-md"></span>
       </div>
@@ -182,8 +181,7 @@ const UploadPage = () => {
           <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
             <div className='w-full flex flex-col md:flex-row gap-4'>
               {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
-              {renderUploadSection('Poster (Optional)', poster, setPoster, 'image/*')} {/* Added poster input */}
-
+              {renderUploadSection('Poster (Optional)', poster, setPoster, 'image/*')}
             </div>
             {renderUploadSection('Video', video, setVideo, 'video/*', true)}
           </div>
@@ -193,18 +191,36 @@ const UploadPage = () => {
               {[ 
                 { label: 'Anime Name', value: animeName, onChange: setAnimeName },
                 { label: 'Episode Name (Optional)', value: episodeName, onChange: setEpisodeName },
-                { label: 'Episode Number', value: episodeNumber, onChange: setEpisodeNumber },
-                { label: 'Description (Optional)', value: description, onChange: setDescription, isTextarea: true },
-              ].map(({ label, value, onChange, isTextarea }) => (
+              ].map(({ label, value, onChange }) => (
                 <div className='mb-4' key={label}>
                   <label className='block text-white text-sm font-bold mb-2'>{label}</label>
-                  {isTextarea ? (
-                    <textarea value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' rows='4' />
-                  ) : (
-                    <input type='text' value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' />
-                  )}
+                  <input type='text' value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' />
                 </div>
               ))}
+              <div className='flex flex-row gap-4 mb-4'>
+                <div className='w-1/2'>
+                  <label className='block text-white text-sm font-bold mb-2'>Season Number</label>
+                  <input
+                    type='number'
+                    value={seasonNumber}
+                    onChange={(e) => setSeasonNumber(e.target.value.replace(/\D/g, ''))}
+                    className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                  />
+                </div>
+                <div className='w-1/2'>
+                  <label className='block text-white text-sm font-bold mb-2'>Episode Number</label>
+                  <input
+                    type='number'
+                    value={episodeNumber}
+                    onChange={(e) => setEpisodeNumber(e.target.value.replace(/\D/g, ''))}
+                    className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                  />
+                </div>
+              </div>
+              <div className='mb-4'>
+                <label className='block text-white text-sm font-bold mb-2'>Description (Optional)</label>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' rows='4' />
+              </div>
               <div className='flex flex-row items-center gap-2'>
                 <button onClick={handleUpload} className='btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg'>Upload</button>
                 <button onClick={handleDiscard} className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg'>Discard</button>
@@ -213,7 +229,6 @@ const UploadPage = () => {
           </div>
         </div>
 
-          {/* Modal for missing fields */}
           {showModal && (
             <div className="modal modal-open">
               <div className="modal-box">
@@ -228,7 +243,6 @@ const UploadPage = () => {
             </div>
           )}
 
-          {/* Confirmation modal */}
           {showConfirmation && (
             <div className="modal modal-open">
               <div className="modal-box">
@@ -241,7 +255,6 @@ const UploadPage = () => {
             </div>
           )}
 
-          {/* Success modal */}
           {showSuccessModal && (
             <div className="modal modal-open">
               <div className="modal-box">
@@ -253,7 +266,6 @@ const UploadPage = () => {
             </div>
           )}
 
-        {/* Loader */}
         {loading && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="flex flex-col items-center justify-center">
