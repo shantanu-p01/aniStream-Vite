@@ -24,6 +24,7 @@ const NavBar = () => {
   // Function to toggle drawer visibility
   const toggleDrawer = useCallback(() => {
     if (isDrawerOpen) {
+      document.body.classList.add('pr-4'); // Add margin-right
       gsap.to(drawerRef.current, {
         x: '100%',
         duration: 0.3,
@@ -31,6 +32,7 @@ const NavBar = () => {
         onComplete: () => setIsDrawerOpen(false),
       });
     } else {
+      document.body.classList.remove('pr-4'); // Add margin-right
       setIsDrawerOpen(true);
       gsap.fromTo(
         drawerRef.current,
