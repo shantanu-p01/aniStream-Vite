@@ -1,16 +1,23 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { gsap } from 'gsap';
+import axios from 'axios';
 
-const animeCards = [
-  { title: 'One Piece', poster: '/posters/onePiecePoster.png', heroImage: '/carousel/onePieceHero.png' },
-  { title: 'Kaiju No.8', poster: '/posters/kaijuNo8.png', heroImage: '/carousel/kaijuNo8Hero.png' },
-  { title: 'Death Note', poster: '/posters/deathNotePoster.png', heroImage: '/carousel/deathNoteHero.png' },
-  { title: 'Naruto', poster: '/posters/narutoPoster.png', heroImage: '/carousel/narutoHero.png' },
-  { title: 'Attack on Titan', poster: '/posters/attackOnTitanPoster.png', heroImage: '/carousel/attackOnTitanHero.png' },
-  { title: 'My Hero Academia', poster: '/posters/myHeroAcademiaPoster.png', heroImage: '/carousel/myHeroAcademiaHero.png' },
-  { title: 'Dragon Ball Z', poster: '/posters/dragonBallZPoster.png', heroImage: '/carousel/dragonBallZHero.png' },
-];
+const Modal = ({ isOpen, title, message, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-black/80 rounded-lg shadow-lg p-6 max-w-sm w-full">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <p className="mb-4">{message}</p>
+        <a className="btn btn-primary w-full" onClick={onClose} href='/contact'>
+          Contact Admin
+        </a>
+      </div>
+    </div>
+  );
+};
 
 const HomePage = () => {
   const scrollContainerRef = useRef(null);
@@ -18,15 +25,33 @@ const HomePage = () => {
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [scrollState, setScrollState] = useState({ canScrollBack: false, canScrollForward: true });
   const [isLoading, setIsLoading] = useState(true);
-
+  const [animeCards, setAnimeCards] = useState([]);
+  const [error, setError] = useState(null);  // State to hold any error messages
+  const [isModalOpen, setIsModalOpen] = useState(false);  // Modal state
+  
+  // Fetch anime cards from the backend
+  useEffect(() => {
+    const fetchAnimeCards = async () => {
+      try {
+        const response = await axios.get('http://192.168.53.182:5000/anime-cards');
+        if (response.data.length === 0) {
+          throw new Error("No anime cards found in the database.");
+        }
+        setAnimeCards(response.data);
+      } catch (err) {
+        setError(err.message || "An error occurred while fetching anime cards.");
+        setIsModalOpen(true);  // Open modal on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchAnimeCards();
+  }, []);
+  
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
     return () => {
-      clearTimeout(timer);
       document.body.style.overflow = 'auto';
     };
   }, [isLoading]);
@@ -34,7 +59,7 @@ const HomePage = () => {
   const handleScroll = (amount) => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-      setTimeout(() => updateScrollState(), 300); // Update scroll state after the scroll
+      setTimeout(() => updateScrollState(), 300);
     }
   };
 
@@ -46,7 +71,7 @@ const HomePage = () => {
 
       setScrollState({
         canScrollBack: scrollLeft > 0,
-        canScrollForward: scrollLeft < maxScrollLeft - 1, // Ensure slight margin for floating point accuracy
+        canScrollForward: scrollLeft < maxScrollLeft - 1,
       });
     }
   };
@@ -63,33 +88,46 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      gsap.fromTo(heroRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
-      setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % animeCards.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+    if (animeCards.length > 0) {
+      const interval = setInterval(() => {
+        gsap.fromTo(heroRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
+        setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % animeCards.length);
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [animeCards]);
 
   return (
     <>
       {isLoading ? (
-        <div className="flex justify-center items-center min-h-svh">
+        <div className="flex justify-center items-center min-h-screen">
           <span className="loading loading-dots loading-md"></span>
         </div>
       ) : (
         <main className="pt-28 mb-5 p-2 min-h-screen">
+          {error && (
+            <Modal
+              isOpen={isModalOpen}
+              title="Error"
+              message={error}
+              onClose={() => setIsModalOpen(false)}
+            />
+          )}
+
           {/* Hero Section */}
-          <div
-            ref={heroRef}
-            className="hero h-[250px] md:h-[500px] max-w-7xl mx-auto rounded-lg bg-cover bg-center relative mb-8"
-            style={{ backgroundImage: `url(${animeCards[currentHeroIndex].heroImage})` }}
-          >
-            <div className="hero-overlay absolute inset-0 bg-opacity-60 rounded-lg" />
-            <div className="hero-content absolute bottom-0 left-0 p-6 pl-3 pb-3 text-white/70">
-              <h1 className="text-4xl md:text-5xl font-bold truncate">{animeCards[currentHeroIndex].title}</h1>
+          {animeCards.length > 0 && (
+            <div
+              ref={heroRef}
+              className="hero h-[250px] md:h-[500px] max-w-7xl mx-auto rounded-lg bg-cover bg-center relative mb-8"
+              style={{ backgroundImage: `url(${animeCards[currentHeroIndex]?.heroImage})` }}
+            >
+              <div className="hero-overlay absolute inset-0 bg-opacity-60 rounded-lg" />
+              <div className="hero-content absolute bottom-0 left-0 p-6 pl-3 pb-3 text-white/70">
+                <h1 className="text-4xl md:text-5xl font-bold truncate">{animeCards[currentHeroIndex]?.title}</h1>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Popular Anime Section */}
           <div className="max-w-7xl mx-auto p-4 bg-black/20 rounded-lg">
@@ -99,14 +137,14 @@ const HomePage = () => {
                 <button
                   className="btn btn-ghost h-fit min-h-fit bg-black/20 hover:bg-black/30 p-1"
                   onClick={() => handleScroll(-175)}
-                  disabled={!scrollState.canScrollBack} // Disable if can't scroll back
+                  disabled={!scrollState.canScrollBack}
                 >
                   <IoIosArrowBack size="24" />
                 </button>
                 <button
                   className="btn btn-ghost h-fit min-h-fit bg-black/20 hover:bg-black/30 p-1"
                   onClick={() => handleScroll(175)}
-                  disabled={!scrollState.canScrollForward} // Disable if can't scroll forward
+                  disabled={!scrollState.canScrollForward}
                 >
                   <IoIosArrowForward size="24" />
                 </button>
