@@ -30,7 +30,7 @@ const ContactPage = () => {
         <span className="loading loading-dots loading-md"></span>
       </div>
       ) : (
-      <main className='pt-28 mb-5 p-4 min-h-fit text-white'>
+      <main className='pt-28 mb-5 p-4 min-h-svh flex items-center justify-center text-white'>
         <div className='flex flex-col lg:flex-row justify-evenly items-center lg:items-start gap-8 max-w-5xl mx-auto p-6 bg-black/20 rounded-lg shadow-lg'>
           
           {/* Shantanu's Profile */}
