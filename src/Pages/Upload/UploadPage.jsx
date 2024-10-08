@@ -3,7 +3,6 @@ import { BiSolidTrash } from "react-icons/bi";
 
 const UploadPage = () => {
   const [thumbnail, setThumbnail] = useState(null);
-  const [poster, setPoster] = useState(null);
   const [video, setVideo] = useState(null);
   const [videoURL, setVideoURL] = useState('');
   const [animeName, setAnimeName] = useState('');
@@ -31,6 +30,7 @@ const UploadPage = () => {
   }, [isLoading]);
 
   const handleFileChange = (e, setFile, isVideo = false) => {
+    if (loading) return; // Prevent file changes during upload
     const file = e.target.files[0];
     if (file) {
       setFile(file);
@@ -39,6 +39,7 @@ const UploadPage = () => {
   };
 
   const handleDrop = (e, setFile, isVideo = false) => {
+    if (loading) return; // Prevent drops during upload
     e.preventDefault();
     handleFileChange({ target: { files: e.dataTransfer.files } }, setFile, isVideo);
   };
@@ -84,7 +85,6 @@ const UploadPage = () => {
   
       if (episodeName) formData.append('episodeName', episodeName);
       if (description) formData.append('description', description);
-      if (poster) formData.append('poster', poster);
   
       const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
@@ -119,7 +119,6 @@ const UploadPage = () => {
 
   const clearFields = () => {
     setThumbnail(null);
-    setPoster(null);
     setVideo(null);
     setVideoURL('');
     setAnimeName('');
@@ -130,7 +129,8 @@ const UploadPage = () => {
   };
 
   const handleDiscard = () => {
-    if (!animeName && !episodeName && !seasonNumber && !episodeNumber && !description && !thumbnail && !poster && !video) {
+    if (loading) return; // Prevent discard during upload
+    if (!animeName && !episodeName && !seasonNumber && !episodeNumber && !description && !thumbnail && !video) {
       setModalMessage('All fields are already empty');
       setShowModal(true);
     } else {
@@ -141,22 +141,22 @@ const UploadPage = () => {
   const renderUploadSection = (label, file, setFile, accept, isVideo = false) => (
     <div className='flex-1 flex flex-col items-center justify-center'>
       <div className='flex justify-between items-center w-full lg:max-w-md min-w-[200px] mb-2'>
-        <h2 className='text-white text-lg font-bold text-center lg:text-left'>{`Upload ${label}`}</h2>
-        {file && (
+        <h2 className='text-white py-2 text-lg font-bold text-center lg:text-left'>{`Upload ${label}`}</h2>
+        {file && !loading && (
           <button onClick={() => { setFile(null); if (isVideo) setVideoURL(''); }} className='btn btn-ghost min-h-fit h-fit p-2 text-red-500 text-2xl'>
             <BiSolidTrash size="24" />
           </button>
         )}
       </div>
       <div
-        className='relative w-full lg:max-w-md min-w-[200px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center cursor-pointer group'
+        className={`relative w-full lg:max-w-md min-w-[200px] h-56 overflow-hidden rounded-lg border-2 border-dashed border-gray-600 bg-black/30 flex items-center justify-center ${loading ? 'cursor-not-allowed' : 'cursor-pointer'} group`}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, setFile, isVideo)}
       >
         {!file ? (
           <>
-            <input type='file' accept={accept} className='hidden' id={`${label.toLowerCase()}-upload`} onChange={(e) => handleFileChange(e, setFile, isVideo)} />
-            <label htmlFor={`${label.toLowerCase()}-upload`} className='w-full text-center h-full flex items-center justify-center text-white cursor-pointer'>
+            <input type='file' accept={accept} className='hidden' id={`${label.toLowerCase()}-upload`} onChange={(e) => handleFileChange(e, setFile, isVideo)} disabled={loading} />
+            <label htmlFor={`${label.toLowerCase()}-upload`} className={`w-full text-center h-full flex items-center justify-center text-white ${loading ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
               {`Drag & Drop ${label} or Click to Upload`}
             </label>
           </>
@@ -176,12 +176,11 @@ const UploadPage = () => {
         <span className="loading loading-dots loading-md"></span>
       </div>
       ) : (
-      <main className='pt-28 p-2 min-h-screen h-full w-full'>
+      <main className='pt-28 p-2 min-h-screen h-full w-full pb-10'>
         <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
           <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
             <div className='w-full flex flex-col md:flex-row gap-4'>
               {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
-              {renderUploadSection('Poster (Optional)', poster, setPoster, 'image/*')}
             </div>
             {renderUploadSection('Video', video, setVideo, 'video/*', true)}
           </div>
@@ -194,7 +193,13 @@ const UploadPage = () => {
               ].map(({ label, value, onChange }) => (
                 <div className='mb-4' key={label}>
                   <label className='block text-white text-sm font-bold mb-2'>{label}</label>
-                  <input type='text' value={value} onChange={(e) => onChange(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' />
+                  <input 
+                    type='text' 
+                    value={value} 
+                    onChange={(e) => onChange(e.target.value)} 
+                    className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                    disabled={loading}
+                  />
                 </div>
               ))}
               <div className='flex flex-row gap-4 mb-4'>
@@ -205,6 +210,7 @@ const UploadPage = () => {
                     value={seasonNumber}
                     onChange={(e) => setSeasonNumber(e.target.value.replace(/\D/g, ''))}
                     className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                    disabled={loading}
                   />
                 </div>
                 <div className='w-1/2'>
@@ -214,16 +220,25 @@ const UploadPage = () => {
                     value={episodeNumber}
                     onChange={(e) => setEpisodeNumber(e.target.value.replace(/\D/g, ''))}
                     className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                    disabled={loading}
                   />
                 </div>
               </div>
               <div className='mb-4'>
                 <label className='block text-white text-sm font-bold mb-2'>Description (Optional)</label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' rows='4' />
+                <textarea 
+                  value={description} 
+                  onChange={(e) => setDescription(e.target.value)} 
+                  className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' 
+                  rows='4'
+                  disabled={loading}
+                />
               </div>
               <div className='flex flex-row items-center gap-2'>
-                <button onClick={handleUpload} className='btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg'>Upload</button>
-                <button onClick={handleDiscard} className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg'>Discard</button>
+                <button onClick={handleUpload} className='btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg' disabled={loading}>
+                  {loading ? 'Uploading...' : 'Upload'}
+                </button>
+                <button onClick={handleDiscard} className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg' disabled={loading}>Discard</button>
               </div>
             </div>
           </div>

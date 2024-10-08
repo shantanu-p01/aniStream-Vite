@@ -33,7 +33,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchAnimeCards = async () => {
       try {
-        const response = await axios.get('http://192.168.53.182:5000/anime-cards');
+        const response = await axios.get('http://localhost:5000/anime-cards');
         if (response.data.length === 0) {
           throw new Error("No anime cards found in the database.");
         }
