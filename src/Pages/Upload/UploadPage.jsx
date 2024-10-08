@@ -51,18 +51,17 @@ const UploadPage = () => {
     if (!episodeNumber) emptyFields.push('Episode Number');
     if (!thumbnail) emptyFields.push('Thumbnail');
     if (!video) emptyFields.push('Video');
+    if (!episodeName) emptyFields.push('Episode Name');
+    if (!description) emptyFields.push('Description');
   
     if (emptyFields.length) {
       setModalMessage(
-        emptyFields.length === 5
+        emptyFields.length === 7
           ? 'All required fields are empty.'
           : 'The following required fields are empty:'
       );
-      setMissingFields(emptyFields.length === 5 ? [] : emptyFields);
+      setMissingFields(emptyFields.length === 7 ? [] : emptyFields);
       setShowModal(true);
-    } else if (!episodeName || !description) {
-      setModalMessage('Some optional fields are empty. Proceed?');
-      setShowConfirmation(true);
     } else {
       performUpload();
     }
@@ -82,10 +81,9 @@ const UploadPage = () => {
       formData.append('episodeNumber', episodeNumber);
       formData.append('thumbnail', thumbnail);
       formData.append('video', video);
-  
-      if (episodeName) formData.append('episodeName', episodeName);
-      if (description) formData.append('description', description);
-  
+      formData.append('episodeName', episodeName);
+      formData.append('description', description);
+    
       const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
         body: formData,
@@ -176,7 +174,7 @@ const UploadPage = () => {
         <span className="loading loading-dots loading-md"></span>
       </div>
       ) : (
-      <main className='pt-28 p-2 min-h-screen h-full w-full pb-10'>
+      <main className='pt-28 p-2 min-h-screen h-full w-full'>
         <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
           <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
             <div className='w-full flex flex-col md:flex-row gap-4'>
@@ -189,7 +187,7 @@ const UploadPage = () => {
               <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Episode Details</h2>
               {[ 
                 { label: 'Anime Name', value: animeName, onChange: setAnimeName },
-                { label: 'Episode Name (Optional)', value: episodeName, onChange: setEpisodeName },
+                { label: 'Episode Name', value: episodeName, onChange: setEpisodeName },
               ].map(({ label, value, onChange }) => (
                 <div className='mb-4' key={label}>
                   <label className='block text-white text-sm font-bold mb-2'>{label}</label>
@@ -225,7 +223,7 @@ const UploadPage = () => {
                 </div>
               </div>
               <div className='mb-4'>
-                <label className='block text-white text-sm font-bold mb-2'>Description (Optional)</label>
+                <label className='block text-white text-sm font-bold mb-2'>Description</label>
                 <textarea 
                   value={description} 
                   onChange={(e) => setDescription(e.target.value)} 
