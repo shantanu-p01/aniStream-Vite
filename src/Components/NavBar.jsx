@@ -24,7 +24,7 @@ const NavBar = () => {
   // Function to toggle drawer visibility
   const toggleDrawer = useCallback(() => {
     if (isDrawerOpen) {
-      document.body.classList.add('pr-4'); // Add margin-right
+      document.body.classList.remove('pr-4'); // Remove margin-right
       gsap.to(drawerRef.current, {
         x: '100%',
         duration: 0.3,
@@ -32,7 +32,9 @@ const NavBar = () => {
         onComplete: () => setIsDrawerOpen(false),
       });
     } else {
-      document.body.classList.remove('pr-4'); // Add margin-right
+      if (window.innerWidth > 768) { // Check for screens larger than md
+        document.body.classList.add('pr-4'); // Add margin-right
+      }
       setIsDrawerOpen(true);
       gsap.fromTo(
         drawerRef.current,
@@ -61,11 +63,13 @@ const NavBar = () => {
     }
   }, [isModalOpen]);
 
-  // Disable body scroll when modal or drawer is open, and add mr-4 to body element
+  // Disable body scroll when modal or drawer is open
   useEffect(() => {
     if (isModalOpen || isDrawerOpen) {
       document.body.style.overflow = 'hidden'; // Disable scrolling
-      document.body.classList.add('pr-4'); // Add margin-right
+      if (window.innerWidth > 768) { // Check for screens larger than md
+        document.body.classList.add('pr-4'); // Add margin-right
+      }
     } else {
       document.body.style.overflow = ''; // Enable scrolling
       document.body.classList.remove('pr-4'); // Remove margin-right

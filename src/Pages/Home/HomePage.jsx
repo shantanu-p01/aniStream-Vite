@@ -11,9 +11,9 @@ const Modal = ({ isOpen, title, message, onClose }) => {
       <div className="bg-black/80 rounded-lg shadow-lg p-6 max-w-sm w-full">
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         <p className="mb-4">{message}</p>
-        <a className="btn btn-primary w-full" onClick={onClose} href='/contact'>
-          Contact Admin
-        </a>
+        <button className="btn btn-primary w-full" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
@@ -25,30 +25,37 @@ const HomePage = () => {
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [scrollState, setScrollState] = useState({ canScrollBack: false, canScrollForward: true });
   const [isLoading, setIsLoading] = useState(true);
-  const [animeCards, setAnimeCards] = useState([]);
-  const [error, setError] = useState(null);  // State to hold any error messages
-  const [isModalOpen, setIsModalOpen] = useState(false);  // Modal state
-  
-  // Fetch anime cards from the backend
+  const [animeData, setAnimeData] = useState([]); // State to store anime data
+  const [error, setError] = useState(null); // State to hold any error messages
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+
+  // Fetch anime data from the backend
   useEffect(() => {
-    const fetchAnimeCards = async () => {
+    console.log("Fetching anime data...");
+    const fetchAnimeData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/anime-cards');
+        const response = await axios.get('http://192.168.101.74:5000/anime-episodes');
         if (response.data.length === 0) {
-          throw new Error("No anime cards found in the database.");
+          throw new Error("No anime data found in the database.");
         }
-        setAnimeCards(response.data);
+        
+        // Filter out duplicate anime entries based on anime_name
+        const uniqueAnimeData = Array.from(
+          new Map(response.data.map(item => [item.anime_name, item])).values()
+        );
+
+        setAnimeData(uniqueAnimeData);
       } catch (err) {
-        setError(err.message || "An error occurred while fetching anime cards.");
-        setIsModalOpen(true);  // Open modal on error
+        setError(err.message || "An error occurred while fetching anime data.");
+        setIsModalOpen(true); // Open modal on error
       } finally {
         setIsLoading(false);
       }
     };
-    
-    fetchAnimeCards();
+
+    fetchAnimeData();
   }, []);
-  
+
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
     return () => {
@@ -88,15 +95,15 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    if (animeCards.length > 0) {
+    if (animeData.length > 0) {
       const interval = setInterval(() => {
         gsap.fromTo(heroRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
-        setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % animeCards.length);
+        setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % animeData.length);
       }, 5000);
-      
+
       return () => clearInterval(interval);
     }
-  }, [animeCards]);
+  }, [animeData]);
 
   return (
     <>
@@ -116,15 +123,15 @@ const HomePage = () => {
           )}
 
           {/* Hero Section */}
-          {animeCards.length > 0 && (
+          {animeData.length > 0 && (
             <div
               ref={heroRef}
               className="hero h-[250px] md:h-[500px] max-w-7xl mx-auto rounded-lg bg-cover bg-center relative mb-8"
-              style={{ backgroundImage: `url(${animeCards[currentHeroIndex]?.heroImage})` }}
+              style={{ backgroundImage: `url(${animeData[currentHeroIndex]?.thumbnail_url})` }}
             >
               <div className="hero-overlay absolute inset-0 bg-opacity-60 rounded-lg" />
               <div className="hero-content absolute bottom-0 left-0 p-6 pl-3 pb-3 text-white/70">
-                <h1 className="text-4xl md:text-5xl font-bold truncate">{animeCards[currentHeroIndex]?.title}</h1>
+                <h1 className="text-4xl md:text-5xl font-bold truncate">{animeData[currentHeroIndex]?.anime_name}</h1>
               </div>
             </div>
           )}
@@ -154,19 +161,19 @@ const HomePage = () => {
               ref={scrollContainerRef}
               className="flex overflow-x-auto gap-3 rounded-lg snap-x snap-mandatory scrollbar-hide"
             >
-              {animeCards.map(({ title, poster }, index) => (
+              {animeData.map(({ anime_name, thumbnail_url }, index) => (
                 <a
                   key={index}
-                  href={`/player?anime=${encodeURIComponent(title)}`}
+                  href={`/player?anime=${encodeURIComponent(anime_name)}`}
                   className="flex-none w-[175px] snap-start bg-black/20 rounded-lg p-2 shadow-lg transition hover:bg-black/40"
                 >
                   <img
                     draggable="false"
                     className="w-full h-[225px] object-cover rounded-lg"
-                    src={poster}
-                    alt={`${title} Poster`}
+                    src={thumbnail_url}
+                    alt={`${anime_name} Thumbnail`}
                   />
-                  <h3 className="text-lg font-semibold text-white text-center truncate mt-2">{title}</h3>
+                  <h3 className="text-lg font-semibold text-white text-center truncate mt-2">{anime_name}</h3>
                 </a>
               ))}
             </div>
