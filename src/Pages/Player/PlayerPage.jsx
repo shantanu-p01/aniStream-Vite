@@ -53,7 +53,6 @@ const PlayerPage = () => {
   // Fetch anime details from the server
   const fetchAnimeDetails = async (anime) => {
     try {
-      // Update the URL to use a path parameter instead of a query parameter
       const response = await fetch(`http://192.168.101.74:5000/fetchAnimeDetails/${anime}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -72,10 +71,19 @@ const PlayerPage = () => {
           return acc;
         }, {});
 
-        setEpisodes(groupedEpisodes);
+        // Sort seasons and episodes in ascending order
+        const sortedGroupedEpisodes = {};
+        Object.keys(groupedEpisodes)
+          .sort((a, b) => a - b) // Sort seasons numerically
+          .forEach(season => {
+            sortedGroupedEpisodes[season] = groupedEpisodes[season].sort((a, b) => a.episode.localeCompare(b.episode)); // Sort episodes alphabetically/numerically
+          });
+
+        setEpisodes(sortedGroupedEpisodes);
+
         // Set initial episode if available
-        if (groupedEpisodes[1] && groupedEpisodes[1].length > 0) {
-          handleEpisodeChange(groupedEpisodes[1][0].episode, groupedEpisodes[1][0].chunk_urls);
+        if (sortedGroupedEpisodes[1] && sortedGroupedEpisodes[1].length > 0) {
+          handleEpisodeChange(sortedGroupedEpisodes[1][0].episode, sortedGroupedEpisodes[1][0].chunk_urls);
         }
       }
     } catch (error) {
@@ -207,16 +215,16 @@ const PlayerPage = () => {
                 </button>
                 <div className='flex items-center justify-center gap-1'>
                   <button
-                    className={`btn ${currentLikeStatus === 'like' ? 'btn-primary' : 'btn-ghost'} h-fit min-h-fit p-1 text-white/80`}
+                    className={`btn ${currentLikeStatus === 'like' ? 'btn-primary' : 'btn-ghost'} text-white/80 transition duration-300`}
                     onClick={() => toggleLikeDislike('like')}
                   >
-                    <BiSolidLike size="24" />
+                    <BiSolidLike size="20" />
                   </button>
                   <button
-                    className={`btn ${currentLikeStatus === 'dislike' ? 'btn-primary' : 'btn-ghost'} h-fit min-h-fit p-1 text-white/80`}
+                    className={`btn ${currentLikeStatus === 'dislike' ? 'btn-primary' : 'btn-ghost'} text-white/80 transition duration-300`}
                     onClick={() => toggleLikeDislike('dislike')}
                   >
-                    <BiSolidDislike size="24" />
+                    <BiSolidDislike size="20" />
                   </button>
                 </div>
                 <button
@@ -224,41 +232,38 @@ const PlayerPage = () => {
                   onClick={handleNextEpisode}
                   disabled={isNextDisabled}
                 >
-                  <h1 className='hidden sm:block pr-2'>Next</h1>
+                  <h1 className='hidden sm:block pl-2'>Next</h1>
                   <IoIosArrowForward size="24" />
                 </button>
               </div>
             </div>
-
-            {/* Episode and Season Selector */}
-            <div className='w-full lg:w-1/3 p-2'>
-              <div className='flex flex-col'>
-                <h2 className='text-lg font-bold text-white'>Select Season:</h2>
-                <div className='flex flex-wrap gap-1 mt-1'>
-                  {Object.keys(episodes).map(season => (
-                    <Button
-                      key={season}
-                      isActive={activeSeason == season}
-                      onClick={() => handleSeasonChange(season)}
-                    >
-                      S{season}
-                    </Button>
-                  ))}
-                </div>
+            {/* Episodes List */}
+            <div className='w-full lg:w-1/3 flex flex-col gap-2 bg-black/20 rounded-lg p-2'>
+              {/* Render Seasons */}
+              <h2 className='text-lg font-semibold text-white'>Season:</h2>
+              <div className='flex gap-1 flex-wrap'>
+                {Object.keys(episodes).map((season) => (
+                  <Button
+                    key={season}
+                    isActive={activeSeason === parseInt(season)}
+                    onClick={() => handleSeasonChange(parseInt(season))}
+                  >
+                    {season}
+                  </Button>
+                ))}
               </div>
-              <div className='flex flex-col mt-2'>
-                <h2 className='text-lg font-bold text-white'>Select Episode:</h2>
-                <div className='flex flex-wrap gap-1 mt-1'>
-                  {episodes[activeSeason]?.map((episode, index) => (
-                    <Button
-                      key={index}
-                      isActive={activeEpisode === episode.episode}
-                      onClick={() => handleEpisodeChange(episode.episode, episode.chunk_urls)}
-                    >
-                      {episode.episode}
-                    </Button>
-                  ))}
-                </div>
+              {/* Render Episodes */}
+              <h2 className='text-lg font-semibold text-white'>Episode:</h2>
+              <div className='flex gap-1 flex-wrap'>
+                {episodes[activeSeason]?.map((ep) => (
+                  <Button
+                    key={ep.episode}
+                    isActive={activeEpisode === ep.episode}
+                    onClick={() => handleEpisodeChange(ep.episode, ep.chunk_urls)}
+                  >
+                    {ep.episode}
+                  </Button>
+                ))}
               </div>
             </div>
           </div>
