@@ -1,6 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import Plyr from 'plyr-react';
-import 'plyr-react/plyr.css';
+import React, { useState, useEffect, useRef } from 'react';
+import Hls from 'hls.js';
 import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -24,12 +23,13 @@ const PlayerPage = () => {
   const [activeSeason, setActiveSeason] = useState(1);
   const [animeName, setAnimeName] = useState('');
   const [episodes, setEpisodes] = useState({});
-  const [isLoading, setIsLoading] = useState(true); // Loader state
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
   const location = useLocation();
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
 
-  // Simulate loading for 1 second when routed
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
     const timer = setTimeout(() => {
@@ -46,11 +46,10 @@ const PlayerPage = () => {
     const anime = searchParams.get('anime');
     if (anime) {
       setAnimeName(decodeURIComponent(anime));
-      fetchAnimeDetails(decodeURIComponent(anime)); // Fetch anime details on mount
+      fetchAnimeDetails(decodeURIComponent(anime));
     }
   }, [location]);
 
-  // Fetch anime details from the server
   const fetchAnimeDetails = async (anime) => {
     try {
       const response = await fetch(`http://192.168.101.74:5000/fetchAnimeDetails/${anime}`);
@@ -59,31 +58,28 @@ const PlayerPage = () => {
       }
       const data = await response.json();
 
-      // Assuming data contains an array of episodes
       if (Array.isArray(data)) {
         const groupedEpisodes = data.reduce((acc, episode) => {
           const season = episode.season_number;
           if (!acc[season]) acc[season] = [];
           acc[season].push({
             episode: episode.episode_name,
-            chunk_urls: episode.chunk_urls, // Keep chunk_urls as an array of URLs
+            m3u8_url: episode.m3u8_url,
           });
           return acc;
         }, {});
 
-        // Sort seasons and episodes in ascending order
         const sortedGroupedEpisodes = {};
         Object.keys(groupedEpisodes)
-          .sort((a, b) => a - b) // Sort seasons numerically
+          .sort((a, b) => a - b)
           .forEach(season => {
-            sortedGroupedEpisodes[season] = groupedEpisodes[season].sort((a, b) => a.episode.localeCompare(b.episode)); // Sort episodes alphabetically/numerically
+            sortedGroupedEpisodes[season] = groupedEpisodes[season].sort((a, b) => a.episode.localeCompare(b.episode));
           });
 
         setEpisodes(sortedGroupedEpisodes);
 
-        // Set initial episode if available
         if (sortedGroupedEpisodes[1] && sortedGroupedEpisodes[1].length > 0) {
-          handleEpisodeChange(sortedGroupedEpisodes[1][0].episode, sortedGroupedEpisodes[1][0].chunk_urls);
+          handleEpisodeChange(sortedGroupedEpisodes[1][0].episode, sortedGroupedEpisodes[1][0].m3u8_url);
         }
       }
     } catch (error) {
@@ -91,18 +87,44 @@ const PlayerPage = () => {
     }
   };
 
-  // Handle episode change and set video source
-  const handleEpisodeChange = (episode, chunkUrls) => {
+  const handleEpisodeChange = (episode, m3u8Url) => {
     setActiveEpisode(episode);
-    setVideoSrc(mergeChunkUrls(chunkUrls)); // Merge chunk URLs
+    setVideoSrc(m3u8Url);
   };
 
-  // Function to merge chunk URLs into a single source for the player
-  const mergeChunkUrls = (chunkUrls) => {
-    return chunkUrls.join(','); // Joining URLs, adjust if needed for your video player
-  };
+  useEffect(() => {
+    if (videoSrc && videoRef.current) {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
 
-  // Handle like/dislike button toggle
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          xhrSetup: (xhr, url) => {
+            xhr.withCredentials = true; // This line enables sending cookies with the request
+          }
+        });
+        hlsRef.current = hls;
+        hls.loadSource(videoSrc);
+        hls.attachMedia(videoRef.current);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoRef.current.play().catch(error => console.log("Playback was prevented:", error));
+        });
+      } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+        videoRef.current.src = videoSrc;
+        videoRef.current.addEventListener('loadedmetadata', () => {
+          videoRef.current.play().catch(error => console.log("Playback was prevented:", error));
+        });
+      }
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+    };
+  }, [videoSrc]);
+
   const toggleLikeDislike = (type) => {
     setLikeStatuses((prevStatuses) => ({
       ...prevStatuses,
@@ -110,38 +132,34 @@ const PlayerPage = () => {
     }));
   };
 
-  // Handle season change and set default episode for the season
   const handleSeasonChange = (season) => {
     setActiveSeason(season);
     const defaultEpisodes = episodes[season];
     if (defaultEpisodes && defaultEpisodes.length > 0) {
-      handleEpisodeChange(defaultEpisodes[0].episode, defaultEpisodes[0].chunk_urls);
+      handleEpisodeChange(defaultEpisodes[0].episode, defaultEpisodes[0].m3u8_url);
     }
   };
 
-  // Handle navigating to the next episode
   const handleNextEpisode = () => {
     const currentEpisodes = episodes[activeSeason];
     const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
     if (currentIndex < currentEpisodes.length - 1) {
       const nextEpisode = currentEpisodes[currentIndex + 1];
-      handleEpisodeChange(nextEpisode.episode, nextEpisode.chunk_urls);
+      handleEpisodeChange(nextEpisode.episode, nextEpisode.m3u8_url);
     }
   };
 
-  // Handle navigating to the previous episode
   const handlePreviousEpisode = () => {
     const currentEpisodes = episodes[activeSeason];
     const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
     if (currentIndex > 0) {
       const previousEpisode = currentEpisodes[currentIndex - 1];
-      handleEpisodeChange(previousEpisode.episode, previousEpisode.chunk_urls);
+      handleEpisodeChange(previousEpisode.episode, previousEpisode.m3u8_url);
     }
   };
 
-  // Detect when video finishes to automatically play the next episode
   useEffect(() => {
-    const player = document.querySelector('.plyr');
+    const player = videoRef.current;
     if (player) {
       player.addEventListener('ended', handleNextEpisode);
     }
@@ -152,32 +170,10 @@ const PlayerPage = () => {
     };
   }, [videoSrc]);
 
-  // Determine if next/previous buttons should be disabled
   const currentEpisodes = episodes[activeSeason] || [];
   const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
   const isNextDisabled = currentIndex === currentEpisodes.length - 1;
   const isPreviousDisabled = currentIndex === 0;
-
-  // Plyr player properties
-  const plyrProps = useMemo(() => ({
-    source: {
-      type: 'video',
-      sources: [
-        {
-          src: videoSrc,
-          type: 'video/mp4',
-        },
-      ],
-    },
-    options: {
-      autoplay: false,
-      controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-      ratio: '16:9',
-      keyboard: {
-        global: true,
-      },
-    },
-  }), [videoSrc]);
 
   const currentLikeStatus = likeStatuses[activeEpisode] || null;
 
@@ -190,7 +186,6 @@ const PlayerPage = () => {
       ) : (
         <main className='pt-24 mb-5 p-2 min-h-fit h-full w-full'>
           <div className='flex flex-col lg:flex-row items-center lg:items-start gap-2 max-w-7xl mx-auto p-2 bg-black/20 rounded-lg'>
-            {/* Video Player */}
             <div className='w-full lg:w-2/3'>
               <div className='w-full pb-2 flex flex-row items-center justify-start gap-2'>
                 <a href='/'
@@ -202,7 +197,7 @@ const PlayerPage = () => {
                 <h1 className='text-xl leading-[0] font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
               </div>
               <div className='aspect-w-16 overflow-hidden rounded-lg aspect-h-9'>
-                <Plyr {...plyrProps} />
+                <video ref={videoRef} controls className="w-full h-full" />
               </div>
               <div className='w-full p-2 flex items-center justify-evenly gap-2 mt-2 rounded-lg bg-black/20'>
                 <button
@@ -237,9 +232,7 @@ const PlayerPage = () => {
                 </button>
               </div>
             </div>
-            {/* Episodes List */}
             <div className='w-full lg:w-1/3 flex flex-col gap-2 bg-black/20 rounded-lg p-2'>
-              {/* Render Seasons */}
               <h2 className='text-lg font-semibold text-white'>Season:</h2>
               <div className='flex gap-1 flex-wrap'>
                 {Object.keys(episodes).map((season) => (
@@ -252,14 +245,13 @@ const PlayerPage = () => {
                   </Button>
                 ))}
               </div>
-              {/* Render Episodes */}
               <h2 className='text-lg font-semibold text-white'>Episode:</h2>
               <div className='flex gap-1 flex-wrap'>
                 {episodes[activeSeason]?.map((ep) => (
                   <Button
                     key={ep.episode}
                     isActive={activeEpisode === ep.episode}
-                    onClick={() => handleEpisodeChange(ep.episode, ep.chunk_urls)}
+                    onClick={() => handleEpisodeChange(ep.episode, ep.m3u8_url)}
                   >
                     {ep.episode}
                   </Button>
