@@ -1,46 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Hls from 'hls.js';
-import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { useNavigate, useLocation } from 'react-router-dom';
+import Plyr from 'plyr';
+import 'plyr/dist/plyr.css';
+import { useLocation } from 'react-router-dom';
 import { GoHomeFill } from "react-icons/go";
 
 // Reusable component for a button (Season/Episode)
-const Button = ({ isActive, onClick, children, disabled }) => (
+const Button = ({ isActive, onClick, children }) => (
   <button
-    className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/20 transition duration-300 ${isActive ? 'bg-white/20' : 'bg-black/20'} text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    className={`w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/20 transition duration-300 ${isActive ? 'bg-white/20' : 'bg-black/20'} text-white`}
     onClick={onClick}
-    disabled={disabled}
   >
     {children}
   </button>
 );
 
 const PlayerPage = () => {
-  const [videoSrc, setVideoSrc] = useState('');
+  const [videoSrc, setVideoSrc] = useState(''); // Initially empty
   const [activeEpisode, setActiveEpisode] = useState('');
-  const [likeStatuses, setLikeStatuses] = useState({});
   const [activeSeason, setActiveSeason] = useState(1);
   const [animeName, setAnimeName] = useState('');
   const [episodes, setEpisodes] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const navigate = useNavigate();
   const location = useLocation();
   const videoRef = useRef(null);
+  const playerRef = useRef(null);
   const hlsRef = useRef(null);
 
+  // Load animation delay
   useEffect(() => {
-    document.body.style.overflow = isLoading ? 'hidden' : 'auto';
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
     return () => {
       clearTimeout(timer);
-      document.body.style.overflow = 'auto';
     };
-  }, [isLoading]);
+  }, []);
 
+  // Fetch anime details when the component mounts
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const anime = searchParams.get('anime');
@@ -52,12 +51,13 @@ const PlayerPage = () => {
 
   const fetchAnimeDetails = async (anime) => {
     try {
+      setError(null);
       const response = await fetch(`http://192.168.101.74:5000/fetchAnimeDetails/${anime}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-
+  
       if (Array.isArray(data)) {
         const groupedEpisodes = data.reduce((acc, episode) => {
           const season = episode.season_number;
@@ -68,71 +68,93 @@ const PlayerPage = () => {
           });
           return acc;
         }, {});
-
+  
         const sortedGroupedEpisodes = {};
         Object.keys(groupedEpisodes)
           .sort((a, b) => a - b)
           .forEach(season => {
             sortedGroupedEpisodes[season] = groupedEpisodes[season].sort((a, b) => a.episode.localeCompare(b.episode));
           });
-
+  
         setEpisodes(sortedGroupedEpisodes);
-
+  
+        // Fetch the first episode's m3u8 URL and start playing
         if (sortedGroupedEpisodes[1] && sortedGroupedEpisodes[1].length > 0) {
-          handleEpisodeChange(sortedGroupedEpisodes[1][0].episode, sortedGroupedEpisodes[1][0].m3u8_url);
+          const firstEpisode = sortedGroupedEpisodes[1][0];
+          handleEpisodeChange(firstEpisode.episode, firstEpisode.m3u8_url); // Call to start playing the first episode
         }
       }
     } catch (error) {
       console.error('Error fetching anime details:', error);
+      setError('Failed to fetch anime details. Please try again later.');
     }
   };
-
+  
   const handleEpisodeChange = (episode, m3u8Url) => {
+    console.log(`Changing episode to: ${episode}, URL: ${m3u8Url}`);
     setActiveEpisode(episode);
-    setVideoSrc(m3u8Url);
+    setVideoSrc(m3u8Url); // This will trigger the useEffect to update the video source
   };
-
+  
+  // UseEffect to handle video source changes and start playing
   useEffect(() => {
-    if (videoSrc && videoRef.current) {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-      }
-
-      if (Hls.isSupported()) {
-        const hls = new Hls({
-          xhrSetup: (xhr, url) => {
-            xhr.withCredentials = true; // This line enables sending cookies with the request
-          }
+    console.log('Video Source:', videoSrc); // Log video source to ensure it’s correct
+  
+    if (videoRef.current && videoSrc) {
+      // If there's no existing player, create one
+      if (!playerRef.current) {
+        const player = new Plyr(videoRef.current, {
+          autoplay: true,
+          muted: false,
         });
+        playerRef.current = player;
+      }
+  
+      // Use HLS.js to load the video source if HLS is supported
+      if (Hls.isSupported()) {
+        if (hlsRef.current) {
+          hlsRef.current.destroy(); // Destroy previous HLS instance if it exists
+        }
+        const hls = new Hls();
         hlsRef.current = hls;
+  
+        // Load the new video source and attach to media
         hls.loadSource(videoSrc);
         hls.attachMedia(videoRef.current);
+  
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          videoRef.current.play().catch(error => console.log("Playback was prevented:", error));
+          playerRef.current.play().catch(error => {
+            console.log("Autoplay was prevented:", error);
+          });
+        });
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          console.error('HLS error:', data); // Log HLS errors
         });
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+        // For native HLS support
         videoRef.current.src = videoSrc;
         videoRef.current.addEventListener('loadedmetadata', () => {
-          videoRef.current.play().catch(error => console.log("Playback was prevented:", error));
+          playerRef.current.play().catch(error => {
+            console.log("Autoplay was prevented:", error);
+          });
         });
       }
+  
+      console.log('Plyr is now displayed with video source:', videoSrc);
     }
-
+  
     return () => {
+      // Clean up HLS instance on unmount or when videoSrc changes
       if (hlsRef.current) {
         hlsRef.current.destroy();
+        hlsRef.current = null; // Clear reference to prevent memory leaks
       }
     };
   }, [videoSrc]);
-
-  const toggleLikeDislike = (type) => {
-    setLikeStatuses((prevStatuses) => ({
-      ...prevStatuses,
-      [activeEpisode]: prevStatuses[activeEpisode] === type ? null : type,
-    }));
-  };
+  
 
   const handleSeasonChange = (season) => {
+    console.log(`Changing season to: ${season}`);
     setActiveSeason(season);
     const defaultEpisodes = episodes[season];
     if (defaultEpisodes && defaultEpisodes.length > 0) {
@@ -140,42 +162,12 @@ const PlayerPage = () => {
     }
   };
 
-  const handleNextEpisode = () => {
-    const currentEpisodes = episodes[activeSeason];
-    const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
-    if (currentIndex < currentEpisodes.length - 1) {
-      const nextEpisode = currentEpisodes[currentIndex + 1];
-      handleEpisodeChange(nextEpisode.episode, nextEpisode.m3u8_url);
-    }
-  };
-
-  const handlePreviousEpisode = () => {
-    const currentEpisodes = episodes[activeSeason];
-    const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
-    if (currentIndex > 0) {
-      const previousEpisode = currentEpisodes[currentIndex - 1];
-      handleEpisodeChange(previousEpisode.episode, previousEpisode.m3u8_url);
-    }
-  };
-
-  useEffect(() => {
-    const player = videoRef.current;
-    if (player) {
-      player.addEventListener('ended', handleNextEpisode);
-    }
-    return () => {
-      if (player) {
-        player.removeEventListener('ended', handleNextEpisode);
-      }
-    };
-  }, [videoSrc]);
-
   const currentEpisodes = episodes[activeSeason] || [];
   const currentIndex = currentEpisodes.findIndex(ep => ep.episode === activeEpisode);
-  const isNextDisabled = currentIndex === currentEpisodes.length - 1;
-  const isPreviousDisabled = currentIndex === 0;
 
-  const currentLikeStatus = likeStatuses[activeEpisode] || null;
+  if (error) {
+    return <div className="text-center text-red-500 mt-10">{error}</div>;
+  }
 
   return (
     <>
@@ -184,7 +176,7 @@ const PlayerPage = () => {
           <span className="loading loading-dots loading-md"></span>
         </div>
       ) : (
-        <main className='pt-24 mb-5 p-2 min-h-fit h-full w-full'>
+        <main className='pt-24 mb-5 p-2 min-h-svh h-full w-full'>
           <div className='flex flex-col lg:flex-row items-center lg:items-start gap-2 max-w-7xl mx-auto p-2 bg-black/20 rounded-lg'>
             <div className='w-full lg:w-2/3'>
               <div className='w-full pb-2 flex flex-row items-center justify-start gap-2'>
@@ -193,67 +185,34 @@ const PlayerPage = () => {
                 >
                   <GoHomeFill size="24" />
                 </a>
-                <IoIosArrowForward className='min-h-fit h-fit' /> 
                 <h1 className='text-xl leading-[0] font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
               </div>
               <div className='aspect-w-16 overflow-hidden rounded-lg aspect-h-9'>
-                <video ref={videoRef} controls className="w-full h-full" />
-              </div>
-              <div className='w-full p-2 flex items-center justify-evenly gap-2 mt-2 rounded-lg bg-black/20'>
-                <button
-                  className={`btn btn-ghost h-fit min-h-fit p-1 text-white/80 ${isPreviousDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={handlePreviousEpisode}
-                  disabled={isPreviousDisabled}
-                >
-                  <IoIosArrowBack size="24" />
-                  <h1 className='hidden sm:block pr-2'>Previous</h1>
-                </button>
-                <div className='flex items-center justify-center gap-1'>
-                  <button
-                    className={`btn ${currentLikeStatus === 'like' ? 'btn-primary' : 'btn-ghost'} text-white/80 transition duration-300`}
-                    onClick={() => toggleLikeDislike('like')}
-                  >
-                    <BiSolidLike size="20" />
-                  </button>
-                  <button
-                    className={`btn ${currentLikeStatus === 'dislike' ? 'btn-primary' : 'btn-ghost'} text-white/80 transition duration-300`}
-                    onClick={() => toggleLikeDislike('dislike')}
-                  >
-                    <BiSolidDislike size="20" />
-                  </button>
-                </div>
-                <button
-                  className={`btn btn-ghost h-fit min-h-fit p-1 text-white/80 ${isNextDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={handleNextEpisode}
-                  disabled={isNextDisabled}
-                >
-                  <h1 className='hidden sm:block pl-2'>Next</h1>
-                  <IoIosArrowForward size="24" />
-                </button>
+                <video 
+                  ref={videoRef} 
+                  className="plyr-react plyr" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover' // Ensures the video fills the player area
+                  }} 
+                />
               </div>
             </div>
-            <div className='w-full lg:w-1/3 flex flex-col gap-2 bg-black/20 rounded-lg p-2'>
-              <h2 className='text-lg font-semibold text-white'>Season:</h2>
-              <div className='flex gap-1 flex-wrap'>
-                {Object.keys(episodes).map((season) => (
-                  <Button
-                    key={season}
-                    isActive={activeSeason === parseInt(season)}
-                    onClick={() => handleSeasonChange(parseInt(season))}
-                  >
+            <div className='flex flex-col w-full lg:w-1/3 max-h-[400px] overflow-auto bg-black/20 p-2 rounded-lg'>
+              <h2 className='text-lg font-semibold'>Seasons</h2>
+              <div className='flex flex-wrap gap-2'>
+                {Object.keys(episodes).map(season => (
+                  <Button key={season} isActive={activeSeason === Number(season)} onClick={() => handleSeasonChange(Number(season))}>
                     {season}
                   </Button>
                 ))}
               </div>
-              <h2 className='text-lg font-semibold text-white'>Episode:</h2>
-              <div className='flex gap-1 flex-wrap'>
-                {episodes[activeSeason]?.map((ep) => (
-                  <Button
-                    key={ep.episode}
-                    isActive={activeEpisode === ep.episode}
-                    onClick={() => handleEpisodeChange(ep.episode, ep.m3u8_url)}
-                  >
-                    {ep.episode}
+              <h2 className='text-lg font-semibold'>Episodes</h2>
+              <div className='flex flex-wrap gap-2'>
+                {currentEpisodes.map((episode, index) => (
+                  <Button key={index} isActive={activeEpisode === episode.episode} onClick={() => handleEpisodeChange(episode.episode, episode.m3u8_url)}>
+                    {episode.episode}
                   </Button>
                 ))}
               </div>
