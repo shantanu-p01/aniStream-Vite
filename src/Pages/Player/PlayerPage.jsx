@@ -1,7 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Hls from 'hls.js';
-import Plyr from 'plyr';
-import 'plyr/dist/plyr.css';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoHomeFill } from "react-icons/go";
 
@@ -25,9 +22,6 @@ const PlayerPage = () => {
   const [error, setError] = useState(null);
 
   const location = useLocation();
-  const videoRef = useRef(null);
-  const playerRef = useRef(null);
-  const hlsRef = useRef(null);
 
   // Load animation delay
   useEffect(() => {
@@ -52,7 +46,7 @@ const PlayerPage = () => {
   const fetchAnimeDetails = async (anime) => {
     try {
       setError(null);
-      const response = await fetch(`http://192.168.101.74:5000/fetchAnimeDetails/${anime}`);
+      const response = await fetch(`http://192.168.1.2:5000/fetchAnimeDetails/${anime}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -93,66 +87,9 @@ const PlayerPage = () => {
   const handleEpisodeChange = (episode, m3u8Url) => {
     console.log(`Changing episode to: ${episode}, URL: ${m3u8Url}`);
     setActiveEpisode(episode);
-    setVideoSrc(m3u8Url); // This will trigger the useEffect to update the video source
+    setVideoSrc(m3u8Url); // Set the new video source to the iframe
   };
   
-  // UseEffect to handle video source changes and start playing
-  useEffect(() => {
-    console.log('Video Source:', videoSrc); // Log video source to ensure it’s correct
-  
-    if (videoRef.current && videoSrc) {
-      // If there's no existing player, create one
-      if (!playerRef.current) {
-        const player = new Plyr(videoRef.current, {
-          autoplay: true,
-          muted: false,
-        });
-        playerRef.current = player;
-      }
-  
-      // Use HLS.js to load the video source if HLS is supported
-      if (Hls.isSupported()) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy(); // Destroy previous HLS instance if it exists
-        }
-        const hls = new Hls();
-        hlsRef.current = hls;
-  
-        // Load the new video source and attach to media
-        hls.loadSource(videoSrc);
-        hls.attachMedia(videoRef.current);
-  
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          playerRef.current.play().catch(error => {
-            console.log("Autoplay was prevented:", error);
-          });
-        });
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error('HLS error:', data); // Log HLS errors
-        });
-      } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        // For native HLS support
-        videoRef.current.src = videoSrc;
-        videoRef.current.addEventListener('loadedmetadata', () => {
-          playerRef.current.play().catch(error => {
-            console.log("Autoplay was prevented:", error);
-          });
-        });
-      }
-  
-      console.log('Plyr is now displayed with video source:', videoSrc);
-    }
-  
-    return () => {
-      // Clean up HLS instance on unmount or when videoSrc changes
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null; // Clear reference to prevent memory leaks
-      }
-    };
-  }, [videoSrc]);
-  
-
   const handleSeasonChange = (season) => {
     console.log(`Changing season to: ${season}`);
     setActiveSeason(season);
@@ -187,16 +124,18 @@ const PlayerPage = () => {
                 </a>
                 <h1 className='text-xl leading-[0] font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
               </div>
-              <div className='aspect-w-16 overflow-hidden rounded-lg aspect-h-9'>
-                <video 
-                  ref={videoRef} 
-                  className="plyr-react plyr" 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: 'cover' // Ensures the video fills the player area
-                  }} 
-                />
+              {/* Video player container */}
+              <div className="relative w-full pb-[50%]"> {/* 16:9 aspect ratio */}
+                {videoSrc ? (
+                  <iframe
+                    className='absolute top-0 left-0 w-full h-full rounded-lg'
+                    src={`https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(videoSrc)}`}
+                    allowFullScreen
+                    style={{ aspectRatio: '16/9' }} // Maintain 16:9 aspect ratio
+                  />
+                ) : (
+                  <div className="text-center text-white absolute top-0 left-0 w-full h-full flex items-center justify-center">Loading video...</div>
+                )}
               </div>
             </div>
             <div className='flex flex-col w-full lg:w-1/3 max-h-[400px] overflow-auto bg-black/20 p-2 rounded-lg'>
@@ -211,8 +150,12 @@ const PlayerPage = () => {
               <h2 className='text-lg font-semibold'>Episodes</h2>
               <div className='flex flex-wrap gap-2'>
                 {currentEpisodes.map((episode, index) => (
-                  <Button key={index} isActive={activeEpisode === episode.episode} onClick={() => handleEpisodeChange(episode.episode, episode.m3u8_url)}>
-                    {episode.episode}
+                  <Button
+                    key={index}
+                    isActive={activeEpisode === episode.episode}
+                    onClick={() => handleEpisodeChange(episode.episode, episode.m3u8_url)}
+                  >
+                    {index + 1} {/* Display episode number */}
                   </Button>
                 ))}
               </div>
