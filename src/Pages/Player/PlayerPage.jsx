@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import ReactPlayer from 'react-player'; // Import ReactPlayer
 import { GoHomeFill } from "react-icons/go";
 
 // Reusable component for a button (Season/Episode)
@@ -87,7 +88,7 @@ const PlayerPage = () => {
   const handleEpisodeChange = (episode, m3u8Url) => {
     console.log(`Changing episode to: ${episode}, URL: ${m3u8Url}`);
     setActiveEpisode(episode);
-    setVideoSrc(m3u8Url); // Set the new video source to the iframe
+    setVideoSrc(m3u8Url); // Set the new video source to ReactPlayer
   };
   
   const handleSeasonChange = (season) => {
@@ -116,22 +117,23 @@ const PlayerPage = () => {
         <main className='pt-24 mb-5 p-2 min-h-svh h-full w-full'>
           <div className='flex flex-col lg:flex-row items-center lg:items-start gap-2 max-w-7xl mx-auto p-2 bg-black/20 rounded-lg'>
             <div className='w-full lg:w-2/3'>
-              <div className='w-full pb-2 flex flex-row items-center justify-start gap-2'>
-                <a href='/'
-                  className='btn btn-ghost transition duration-300 min-h-fit h-fit p-1 bg-white/20 hover:bg-white/30'
-                >
-                  <GoHomeFill size="24" />
-                </a>
-                <h1 className='text-xl leading-[0] font-semibold'>{animeName} - Episode {currentIndex + 1}</h1>
-              </div>
-              {/* Video player container */}
-              <div className="relative w-full pb-[50%]"> {/* 16:9 aspect ratio */}
+            <div className='w-full pb-2 flex flex-row items-center justify-start gap-2'>
+              <a href='/'
+                className='btn btn-ghost transition duration-300 min-h-fit h-fit p-1 bg-white/20 hover:bg-white/30'
+              >
+                <GoHomeFill size="24" />
+              </a>
+              <h1 className='text-xl leading-[0] font-semibold'>{animeName} - {activeEpisode}</h1> {/* Using activeEpisode */}
+            </div>
+              {/* Video player container with ReactPlayer */}
+              <div className="relative w-full pb-[56.25%] overflow-hidden rounded-lg"> {/* 16:9 aspect ratio */}
                 {videoSrc ? (
-                  <iframe
-                    className='absolute top-0 left-0 w-full h-full rounded-lg'
-                    src={`https://www.livereacting.com/tools/hls-player-embed?url=${encodeURIComponent(videoSrc)}`}
-                    allowFullScreen
-                    style={{ aspectRatio: '16/9' }} // Maintain 16:9 aspect ratio
+                  <ReactPlayer
+                    className='absolute top-0 left-0 w-full h-full'
+                    url={videoSrc}
+                    controls={true}
+                    width='100%'
+                    height='100%'
                   />
                 ) : (
                   <div className="text-center text-white absolute top-0 left-0 w-full h-full flex items-center justify-center">Loading video...</div>
