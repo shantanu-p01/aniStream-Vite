@@ -7,17 +7,14 @@ import { MdEmail } from "react-icons/md";
 import { BiSolidCloudUpload } from "react-icons/bi";
 import { gsap } from 'gsap';
 import { useLocation, useNavigate } from 'react-router-dom';
+import SearchBar from './SearchBar';
 
 const NavBar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const drawerRef = useRef(null);
-  const modalRef = useRef(null);
-  const searchBarRef = useRef(null);
-  const searchInputRef = useRef(null);
   const highlightRef = useRef(null);
   const buttonRefs = useRef([]);
-  const [searchText, setSearchText] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -44,24 +41,10 @@ const NavBar = () => {
     }
   }, [isDrawerOpen]);
 
-  // Function to toggle modal and animate search bar
+  // Function to toggle modal
   const toggleModal = useCallback(() => {
     setIsModalOpen(prev => !prev);
   }, []);
-
-  // Handle clicking outside of the modal
-  const handleClickOutside = useCallback((event) => {
-    if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
-      setIsModalOpen(false);
-    }
-  }, []);
-
-  // Handle Escape key press
-  const handleKeyDown = useCallback((event) => {
-    if (event.key === 'Escape' && isModalOpen) {
-      setIsModalOpen(false);
-    }
-  }, [isModalOpen]);
 
   // Disable body scroll when modal or drawer is open
   useEffect(() => {
@@ -80,39 +63,6 @@ const NavBar = () => {
       document.body.classList.remove('pr-4'); // Ensure margin-right is removed on cleanup
     };
   }, [isModalOpen, isDrawerOpen]);
-
-  useEffect(() => {
-    if (isModalOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
-      gsap.to(modalRef.current, { opacity: 1, duration: 0.3, ease: 'power3.out' });
-      gsap.fromTo(
-        searchBarRef.current,
-        { y: '-50px', opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.3, ease: 'power3.out', delay: 0.1, onComplete: () => {
-          searchInputRef.current.focus();
-        }}
-      );
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-      gsap.to(modalRef.current, { opacity: 0, duration: 0.3, ease: 'power3.in' });
-      gsap.to(searchBarRef.current, { 
-        y: '-50px', 
-        opacity: 0, 
-        duration: 0.3, 
-        ease: 'power3.in',
-        onComplete: () => {
-          setSearchText('');
-        }
-      });
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isModalOpen, handleClickOutside, handleKeyDown]);
 
   // Function to move the highlight element to the active button
   const moveHighlight = (button) => {
@@ -232,36 +182,7 @@ const NavBar = () => {
       </div>
 
       {/* Search Modal */}
-      <div 
-        ref={modalRef}
-        className={`fixed inset-0 w-screen z-30 flex items-start justify-center px-4 bg-black/70 backdrop-blur-sm ${isModalOpen ? '' : 'pointer-events-none'}`}
-        style={{ opacity: 0 }}
-      >
-        <div
-          ref={searchBarRef}
-          className='bg-[#292929] p-1 w-[85%] md:w-[50%] mx-4 rounded-full mt-3 shadow-lg'
-          style={{ opacity: 0, transform: 'translateY(-50px)' }}
-        >
-          <div className='relative'>
-            <input
-              ref={searchInputRef}
-              type='text'
-              placeholder='Search...'
-              className='w-full p-3 pr-10 rounded-full bg-[#1f1f1f] text-white focus:outline-none'
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-            {searchText && (
-              <button
-                onClick={() => setSearchText('')}
-                className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors'
-              >
-                <CgClose size='18' />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <SearchBar isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
     </header>
   );
 };
