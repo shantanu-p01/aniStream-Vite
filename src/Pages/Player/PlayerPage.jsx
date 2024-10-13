@@ -59,6 +59,8 @@ const PlayerPage = () => {
           if (!acc[season]) acc[season] = [];
           acc[season].push({
             episode: episode.episode_name,
+            episodeNumber: episode.episode_number, // Added episode number
+            season: episode.season_number, // Added season number
             m3u8_url: episode.m3u8_url,
           });
           return acc;
@@ -68,7 +70,7 @@ const PlayerPage = () => {
         Object.keys(groupedEpisodes)
           .sort((a, b) => a - b)
           .forEach(season => {
-            sortedGroupedEpisodes[season] = groupedEpisodes[season].sort((a, b) => a.episode.localeCompare(b.episode));
+            sortedGroupedEpisodes[season] = groupedEpisodes[season].sort((a, b) => a.episodeNumber - b.episodeNumber);
           });
   
         setEpisodes(sortedGroupedEpisodes);
@@ -145,7 +147,7 @@ const PlayerPage = () => {
               <div className='flex flex-wrap gap-2'>
                 {Object.keys(episodes).map(season => (
                   <Button key={season} isActive={activeSeason === Number(season)} onClick={() => handleSeasonChange(Number(season))}>
-                    {season}
+                    {season} {/* Display actual season number */}
                   </Button>
                 ))}
               </div>
@@ -157,7 +159,7 @@ const PlayerPage = () => {
                     isActive={activeEpisode === episode.episode}
                     onClick={() => handleEpisodeChange(episode.episode, episode.m3u8_url)}
                   >
-                    {index + 1} {/* Display episode number */}
+                    {episode.episodeNumber}{/* Display episode number and name */}
                   </Button>
                 ))}
               </div>
