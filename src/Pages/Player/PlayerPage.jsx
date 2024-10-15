@@ -122,6 +122,7 @@ const PlayerPage = () => {
         <main className='pt-24 mb-5 p-2 min-h-svh h-full w-full'>
           <div className='flex flex-col lg:flex-row items-center lg:items-start gap-2 max-w-7xl mx-auto p-2 bg-black/20 rounded-lg'>
             <div className='w-full lg:w-2/3'>
+            {/* Anime Heading Text */}
               <div className='w-full pb-2 flex flex-row items-center justify-start gap-2'>
                 <a href='/'
                   className='btn btn-ghost transition duration-300 min-h-fit h-fit p-1 bg-white/20 hover:bg-white/30'
@@ -129,7 +130,7 @@ const PlayerPage = () => {
                   <GoHomeFill size="24" />
                 </a>
                 <IoIosArrowForward size="20" />
-                <h1 className='text-xl leading-[0] font-semibold'>{animeName} - {activeEpisode}</h1>
+                <h1 className='text-xl leading-[0] font-semibold'>{animeName}</h1>
               </div>
               {/* Video player container with ReactPlayer */}
               <div className="relative w-full pb-[56.25%] overflow-hidden rounded-lg">
@@ -148,16 +149,14 @@ const PlayerPage = () => {
                 )}
               </div>
             </div>
-            <div className='flex flex-col w-full lg:w-1/3 max-h-[400px] overflow-auto gap-2'>
-              {/* Description Section */}
-              <div className='bg-black/20 px-2 pb-2 rounded-lg flex flex-col w-full overflow-auto'>
-                <h2 className='text-xl font-semibold pt-1 pb-2'>Description</h2>
-                <p className='text-sm'>
-                  {currentDescription} {/* Display the current episode description */}
-                </p>
+            <div className='flex flex-col w-full lg:w-1/3 overflow-auto gap-2'>
+            {/* Anime Name Section */}
+              <div className='bg-black/20 px-2 pb-2 max-h-[300px] rounded-lg flex flex-col w-full overflow-auto'>
+                <h1 className='text-xl font-semibold pt-1'>Episode Name</h1>
+                <h2 className='text-lg'>{activeEpisode}</h2>
               </div>
               {/* Seasons and Episode Section */}
-              <div className='bg-black/20 px-2 pb-2 rounded-lg flex flex-col w-full overflow-auto'>
+              <div className='bg-black/20 px-2 pb-2 rounded-lg flex flex-col w-full h-fit overflow-hidden'>
                 <h2 className='text-lg font-semibold pt-1'>Seasons</h2>
                 <div className='flex flex-wrap gap-2 pb-3 pt-1'>
                   {Object.keys(episodes).map(season => (
@@ -178,6 +177,13 @@ const PlayerPage = () => {
                     </Button>
                   ))}
                 </div>
+              </div>
+              {/* Description Section */}
+              <div className='bg-black/20 px-2 pb-2 max-h-[300px] rounded-lg flex flex-col w-full overflow-auto'>
+                <h2 className='text-xl font-semibold pt-1 pb-2'>Description</h2>
+                <p className='text-sm'>
+                  {currentDescription} {/* Display the current episode description */}
+                </p>
               </div>
             </div>
           </div>
