@@ -45,10 +45,9 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
     }
   }, [searchText, animeList]);
 
-  // Handle clicking outside of the modal
-  const handleClickOutside = (event) => {
-    if (searchBarRef.current && !searchBarRef.current.contains(event.target) &&
-        dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+  // Handle clicking outside of the search bar (modal click closes, search bar click does not)
+  const handleModalClick = (event) => {
+    if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
       setIsModalOpen(false);
     }
   };
@@ -62,7 +61,6 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
 
   useEffect(() => {
     if (isModalOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
       gsap.to(modalRef.current, { opacity: 1, duration: 0.3, ease: 'power3.out' });
       gsap.fromTo(
@@ -73,7 +71,6 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
         }}
       );
     } else {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
       gsap.to(modalRef.current, { opacity: 0, duration: 0.3, ease: 'power3.in' });
       gsap.to(searchBarRef.current, { 
@@ -89,7 +86,6 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isModalOpen, setIsModalOpen]);
@@ -106,16 +102,18 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
   };
 
   return (
-    <div 
+    <div
       ref={modalRef}
       className={`fixed inset-0 w-screen z-30 flex items-start justify-center px-4 bg-black/70 backdrop-blur-sm ${isModalOpen ? '' : 'pointer-events-none'}`}
       style={{ opacity: 0 }}
+      onClick={handleModalClick} // Close when clicking on modal background
     >
       <div className="relative w-[85%] md:w-[50%]">
         <div
           ref={searchBarRef}
           className='bg-[#292929] p-1 rounded-full mt-3 shadow-lg'
           style={{ opacity: 0, transform: 'translateY(-50px)' }}
+          onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking on search bar
         >
           <div className='relative'>
             <input
