@@ -17,7 +17,7 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
   useEffect(() => {
     const fetchAnimeData = async () => {
       try {
-        const response = await fetch('http://192.168.1.2:5000/anime-episodes');
+        const response = await fetch('http://192.168.1.7:5000/anime-episodes');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
