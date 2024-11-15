@@ -49,7 +49,7 @@ const PlayerPage = () => {
   const fetchAnimeDetails = async (anime) => {
     try {
       setError(null);
-      const response = await fetch(`http://192.168.1.7:5000/fetchAnimeDetails/${anime}`);
+      const response = await fetch(`http://192.168.101.74:5000/fetchAnimeDetails/${anime}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

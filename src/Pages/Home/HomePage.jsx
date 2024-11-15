@@ -34,7 +34,7 @@ const HomePage = () => {
     console.log("Fetching anime data...");
     const fetchAnimeData = async () => {
       try {
-        const response = await axios.get('http://192.168.1.7:5000/anime-episodes');
+        const response = await axios.get('http://192.168.101.74:5000/anime-episodes');
         if (response.data.length === 0) {
           throw new Error("No anime data found in the database.");
         }
@@ -127,11 +127,17 @@ const HomePage = () => {
             <div
               ref={heroRef}
               className="hero h-[250px] md:h-[500px] max-w-7xl mx-auto rounded-lg bg-cover bg-center relative mb-8"
-              style={{ backgroundImage: `url(${animeData[currentHeroIndex]?.thumbnail_url})` }}
+              style={{
+                backgroundImage: animeData[currentHeroIndex]?.thumbnail_url
+                  ? `url("${animeData[currentHeroIndex].thumbnail_url}")`
+                  : "none",
+              }}
             >
               <div className="hero-overlay absolute inset-0 bg-opacity-60 rounded-lg" />
               <div className="hero-content absolute bottom-0 left-0 p-6 pl-3 pb-3 text-white/70">
-                <h1 className="text-4xl md:text-5xl font-bold truncate">{animeData[currentHeroIndex]?.anime_name}</h1>
+                <h1 className="text-4xl md:text-5xl font-bold truncate">
+                  {animeData[currentHeroIndex]?.anime_name || "No Title"}
+                </h1>
               </div>
             </div>
           )}
