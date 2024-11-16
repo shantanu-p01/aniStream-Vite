@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BiSolidTrash } from "react-icons/bi";
+import ModifyUploads from '../../Components/ModifyUploads';
 
 const UploadPage = () => {
   const [thumbnail, setThumbnail] = useState(null);
@@ -17,6 +18,7 @@ const UploadPage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showModifyUploads, setShowModifyUploads] = useState(false); // State for toggling sections
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
@@ -36,6 +38,10 @@ const UploadPage = () => {
       setFile(file);
       if (isVideo) setVideoURL(URL.createObjectURL(file));
     }
+  };
+
+  const toggleModifyUploads = () => {
+    setShowModifyUploads((prev) => !prev);
   };
 
   const handleDrop = (e, setFile, isVideo = false) => {
@@ -170,78 +176,98 @@ const UploadPage = () => {
   return (
     <>
       {isLoading ? (
-      <div className="flex justify-center items-center min-h-svh">
-        <span className="loading loading-dots loading-md"></span>
-      </div>
-      ) : (
-      <main className='pt-28 p-2 min-h-screen h-full w-full pb-10'>
-        <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
-          <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
-            <div className='w-full flex flex-col md:flex-row gap-4'>
-              {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
-            </div>
-            {renderUploadSection('Video', video, setVideo, 'video/*', true)}
-          </div>
-          <div className='w-full lg:w-1/2 flex flex-col gap-4 flex-1'>
-            <div className='bg-black/20 p-4 rounded-lg flex-1'>
-              <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Episode Details</h2>
-              {[ 
-                { label: 'Anime Name', value: animeName, onChange: setAnimeName },
-                { label: 'Episode Name', value: episodeName, onChange: setEpisodeName },
-              ].map(({ label, value, onChange }) => (
-                <div className='mb-4' key={label}>
-                  <label className='block text-white text-sm font-bold mb-2'>{label}</label>
-                  <input 
-                    type='text' 
-                    value={value} 
-                    onChange={(e) => onChange(e.target.value)} 
-                    className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
-                    disabled={loading}
-                  />
-                </div>
-              ))}
-              <div className='flex flex-row gap-4 mb-4'>
-                <div className='w-1/2'>
-                  <label className='block text-white text-sm font-bold mb-2'>Season Number</label>
-                  <input
-                    type='number'
-                    value={seasonNumber}
-                    onChange={(e) => setSeasonNumber(e.target.value.replace(/\D/g, ''))}
-                    className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
-                    disabled={loading}
-                  />
-                </div>
-                <div className='w-1/2'>
-                  <label className='block text-white text-sm font-bold mb-2'>Episode Number</label>
-                  <input
-                    type='number'
-                    value={episodeNumber}
-                    onChange={(e) => setEpisodeNumber(e.target.value.replace(/\D/g, ''))}
-                    className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-              <div className='mb-4'>
-                <label className='block text-white text-sm font-bold mb-2'>Description</label>
-                <textarea 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)} 
-                  className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500' 
-                  rows='4'
-                  disabled={loading}
-                />
-              </div>
-              <div className='flex flex-row items-center gap-2'>
-                <button onClick={handleUpload} className='btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg' disabled={loading}>
-                  {loading ? 'Uploading...' : 'Upload'}
-                </button>
-                <button onClick={handleDiscard} className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg' disabled={loading}>Discard</button>
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-center items-center min-h-svh">
+          <span className="loading loading-dots loading-md"></span>
         </div>
+      ) : (
+        <main className='pt-24 p-2 min-h-screen h-full w-full pb-10'>
+          <div className='flex flex-col h-full items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
 
+            {/* Heading Section */}
+            <div className='w-full flex flex-row items-center justify-between gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg h-14'>
+              <h1 className='text-2xl hover:scale-95 duration-700 font-semibold'>
+                {showModifyUploads ? 'Modify Uploads' : 'Upload Episode'}
+              </h1>
+              <button
+                onClick={toggleModifyUploads}
+                className={`btn py-3 px-2 min-h-fit h-fit ${showModifyUploads ? 'btn-error' : 'btn-info'}`}
+              >
+                {showModifyUploads ? 'Close' : 'Modify Uploads'}
+              </button>
+            </div>
+
+            {/* Conditional Rendering */}
+            {!showModifyUploads ? (
+              <div className='flex flex-col h-full lg:flex-row items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
+                <div className='w-full lg:w-1/2 flex flex-row flex-wrap items-center justify-center gap-4'>
+                  <div className='w-full flex flex-col md:flex-row gap-4'>
+                    {renderUploadSection('Thumbnail', thumbnail, setThumbnail, 'image/*')}
+                  </div>
+                  {renderUploadSection('Video', video, setVideo, 'video/*', true)}
+                </div>
+                <div className='w-full lg:w-1/2 flex flex-col gap-4 flex-1'>
+                  <div className='bg-black/20 p-4 rounded-lg flex-1'>
+                    <h2 className='text-white text-lg font-bold text-center lg:text-left mb-2'>Episode Details</h2>
+                    {[
+                      { label: 'Anime Name', value: animeName, onChange: setAnimeName },
+                      { label: 'Episode Name', value: episodeName, onChange: setEpisodeName },
+                    ].map(({ label, value, onChange }) => (
+                      <div className='mb-4' key={label}>
+                        <label className='block text-white text-sm font-bold mb-2'>{label}</label>
+                        <input
+                          type='text'
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                          disabled={loading}
+                        />
+                      </div>
+                    ))}
+                    <div className='flex flex-row gap-4 mb-4'>
+                      <div className='w-1/2'>
+                        <label className='block text-white text-sm font-bold mb-2'>Season Number</label>
+                        <input
+                          type='number'
+                          value={seasonNumber}
+                          onChange={(e) => setSeasonNumber(e.target.value.replace(/\D/g, ''))}
+                          className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                          disabled={loading}
+                        />
+                      </div>
+                      <div className='w-1/2'>
+                        <label className='block text-white text-sm font-bold mb-2'>Episode Number</label>
+                        <input
+                          type='number'
+                          value={episodeNumber}
+                          onChange={(e) => setEpisodeNumber(e.target.value.replace(/\D/g, ''))}
+                          className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+                    <div className='mb-4'>
+                      <label className='block text-white text-sm font-bold mb-2'>Description</label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                        rows='4'
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className='flex flex-row items-center gap-2'>
+                      <button onClick={handleUpload} className='btn btn-info w-1/2 text-white font-bold py-2 px-4 rounded-lg' disabled={loading}>
+                        {loading ? 'Uploading...' : 'Upload'}
+                      </button>
+                      <button onClick={handleDiscard} className='btn btn-error w-1/2 text-white font-bold py-2 px-2 rounded-lg' disabled={loading}>Discard</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ModifyUploads />
+            )}
+          </div>
           {showModal && (
             <div className="modal modal-open">
               <div className="modal-box">
