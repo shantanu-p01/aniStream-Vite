@@ -58,64 +58,17 @@ const ModifyUploads = () => {
     setEpisodeDetails(null);
   };
 
-  const handleUpdateEpisode = async () => {
-    if (!episodeDetails) return;
-  
-    // Log to make sure all fields are correctly populated
-    console.log('Episode details:', episodeDetails);
-  
-    // Ensure all required fields are present in updatedEpisodeDetails
-    const updatedEpisodeDetails = {
-      animeName: episodeDetails.anime_name,  // Old anime name
-      episodeName: episodeDetails.episode_name,  // Old episode name
-      seasonNumber: episodeDetails.season_number,  // Old season number
-      episodeNumber: episodeDetails.episode_number,  // Old episode number
-      newAnimeName: episodeDetails.new_anime_name || episodeDetails.anime_name,  // New anime name (use the original if not updated)
-      newEpisodeName: episodeDetails.new_episode_name || episodeDetails.episode_name,  // New episode name
-      newSeasonNumber: episodeDetails.new_season_number || episodeDetails.season_number,  // New season number
-      newEpisodeNumber: episodeDetails.new_episode_number || episodeDetails.episode_number,  // New episode number
-    };
-  
-    // Check if any required fields are missing before making the request
-    if (!updatedEpisodeDetails.animeName || 
-        !updatedEpisodeDetails.episodeName || 
-        !updatedEpisodeDetails.seasonNumber || 
-        !updatedEpisodeDetails.episodeNumber ||
-        !updatedEpisodeDetails.newAnimeName ||
-        !updatedEpisodeDetails.newEpisodeName ||
-        !updatedEpisodeDetails.newSeasonNumber ||
-        !updatedEpisodeDetails.newEpisodeNumber) {
-      console.error('Missing required fields:', updatedEpisodeDetails);
-      return;
-    }
-  
-    try {
-      const response = await fetch("http://192.168.101.74:5000/update-episode", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedEpisodeDetails),
-      });
-  
-      const result = await response.json();
-      alert(result.message); // You can replace this with a success message or UI update
-    } catch (error) {
-      console.error("Error updating episode:", error);
-    }
-  };  
-  
   const handleDeleteEpisode = async () => {
     if (!episodeDetails) return;
-  
+
     const episodeDetailsToDelete = {
       animeName: episodeDetails.anime_name,
       seasonNumber: episodeDetails.season_number,
       episodeNumber: episodeDetails.episode_number,
     };
-  
+
     console.log("Deleting episode:", episodeDetailsToDelete); // Add this to check if correct values are being passed
-  
+
     try {
       const response = await fetch("http://192.168.101.74:5000/delete-episode", {
         method: "DELETE",
@@ -124,13 +77,13 @@ const ModifyUploads = () => {
         },
         body: JSON.stringify(episodeDetailsToDelete),
       });
-  
+
       const result = await response.json();
       alert(result.message); // You can replace this with a success message or UI update
     } catch (error) {
       console.error("Error deleting episode:", error);
     }
-  };  
+  };
 
   return (
     <div className="flex flex-col h-full items-center justify-center gap-4 w-full p-2 bg-black/20 rounded-lg">
@@ -142,7 +95,7 @@ const ModifyUploads = () => {
           <h1 className="text-lg font-semibold mb-2">Seasons:</h1>
           <div className="flex gap-2 flex-wrap">
             {Array.from({ length: selectedAnime.total_seasons }).map((_, index) => (
-              <button key={index + 1} className={`py-2 px-4 rounded-lg bg-white/20 text-white ${selectedSeason === index + 1 && "bg-white/30"}`} onClick={() => handleSelectSeason(index + 1)}>{index + 1}</button>
+              <button key={index + 1} className={`py-2 px-4 rounded-lg bg-black/30 duration-500 text-white ${selectedSeason === index + 1 && "bg-white/30"}`} onClick={() => handleSelectSeason(index + 1)}>{index + 1}</button>
             ))}
           </div>
         </div>
@@ -153,7 +106,7 @@ const ModifyUploads = () => {
           <h1 className="text-lg font-semibold mb-2">Episodes:</h1>
           <div className="flex gap-2 flex-wrap">
             {selectedAnime.episodes_by_season[selectedSeason]?.map((episode) => (
-              <button key={episode.episode_number} className="py-2 px-4 rounded-lg bg-white/20 text-white" onClick={() => handleSelectEpisode(episode.episode_number, selectedAnime.anime_name, selectedSeason)}>{episode.episode_number}</button>
+              <button key={episode.episode_number} className="py-2 px-4 rounded-lg bg-black/30 duration-300 hover:bg-white/30 text-white" onClick={() => handleSelectEpisode(episode.episode_number, selectedAnime.anime_name, selectedSeason)}>{episode.episode_number}</button>
             ))}
           </div>
         </div>
@@ -191,26 +144,23 @@ const ModifyUploads = () => {
             </div>
             <div className="text-white mb-4">
               <label className="block font-semibold">Anime Name:</label>
-              <input type="text" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.new_anime_name || episodeDetails.anime_name} onChange={(e) => setEpisodeDetails({ ...episodeDetails, new_anime_name: e.target.value })} />
+              <input type="text" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.anime_name} readOnly />
             </div>
             <div className="text-white mb-4">
               <label className="block font-semibold">Episode Name:</label>
-              <input type="text" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.new_episode_name || episodeDetails.episode_name} onChange={(e) => setEpisodeDetails({ ...episodeDetails, new_episode_name: e.target.value })} />
+              <input type="text" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.episode_name} readOnly />
             </div>
             <div className="w-full flex gap-4">
               <div className="w-full mb-4">
                 <label className="block font-semibold">Episode No.:</label>
-                <input type="number" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.new_episode_number || episodeDetails.episode_number} onChange={(e) => setEpisodeDetails({ ...episodeDetails, new_episode_number: e.target.value })} />
+                <input type="number" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.episode_number} readOnly />
               </div>
               <div className="w-full mb-4">
                 <label className="block font-semibold">Season No.:</label>
-                <input type="number" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.new_season_number || episodeDetails.season_number} onChange={(e) => setEpisodeDetails({ ...episodeDetails, new_season_number: e.target.value })} />
+                <input type="number" className="w-full p-2 rounded-lg bg-gray-800 text-white" value={episodeDetails.season_number} readOnly />
               </div>
             </div>
-            <div className="flex justify-between gap-4">
-              <button onClick={handleDeleteEpisode} className="w-full py-2 px-4 bg-red-600 text-white rounded-lg">Delete</button>
-              <button onClick={handleUpdateEpisode} className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg">Update</button>
-            </div>
+            <button onClick={handleDeleteEpisode} className="btn btn-error py-3 px-2 w-full">Delete Episode</button>
           </div>
         </div>
       )}
