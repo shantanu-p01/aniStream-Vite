@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { gsap } from 'gsap';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 const Modal = ({ isOpen, title, message, onClose }) => {
   if (!isOpen) return null;
@@ -21,8 +20,6 @@ const Modal = ({ isOpen, title, message, onClose }) => {
 };
 
 const HomePage = () => {
-  const navigate = useNavigate();
-  const [authStatus, setAuthStatus] = useState(null);
   const scrollContainerRef = useRef(null);
   const heroRef = useRef(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -37,7 +34,7 @@ const HomePage = () => {
     console.log("Fetching anime data...");
     const fetchAnimeData = async () => {
       try {
-        const response = await axios.get('http://192.168.101.70:5000/anime-episodes');
+        const response = await axios.get('http://localhost:5000/anime-episodes');
         if (response.data.length === 0) {
           throw new Error("No anime data found in the database.");
         }
@@ -58,29 +55,6 @@ const HomePage = () => {
 
     return () => fetchAnimeData();
   }, []);
-
-  // Check for authentication status on page load
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/auth/status', { withCredentials: true });
-        setAuthStatus(response.data.status); // Set to 'authenticated' or 'guest'
-        
-        if (response.data.status === 'authenticated' && response.data.isAdmin === true) {
-          // Redirect to homepage if user is authenticated
-          // navigate('/');
-          console.log('Welcome Admin');
-        } else {
-          console.log('Welcome User');
-        }
-
-      } catch (err) {
-        console.log('Not Authenticated');
-        setAuthStatus('guest');
-      }
-    };
-    return () => checkAuthStatus();
-  }, [navigate]);
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
@@ -159,7 +133,7 @@ const HomePage = () => {
                   : "none",
               }}
             >
-              <div className="hero-overlay absolute inset-0 bg-opacity-60 rounded-lg" />
+              <div className="hero-overlay absolute inset-0 bg-opacity-30 rounded-lg" />
               <div className="hero-content absolute bottom-0 left-0 p-6 pl-3 pb-3 text-white/70">
                 <h1 className="text-4xl md:text-5xl font-bold truncate">
                   {animeData[currentHeroIndex]?.anime_name || "No Title"}

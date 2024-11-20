@@ -8,10 +8,12 @@ import { BiSolidCloudUpload } from "react-icons/bi";
 import { gsap } from 'gsap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
+import UserProfileModal from './UserProfileModal';
 
 const NavBar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const drawerRef = useRef(null);
   const highlightRef = useRef(null);
@@ -24,7 +26,7 @@ const NavBar = () => {
     const checkAuthStatus = async () => {
       try {
         const response = await fetch('http://localhost:5000/auth/status', {
-          credentials: 'include' // Important for sending cookies
+          credentials: 'include'
         });
         
         if (response.ok) {
@@ -46,6 +48,11 @@ const NavBar = () => {
   const handleAuthClick = () => {
     if (!user) {
       navigate('/auth');
+      if (isDrawerOpen) {
+        toggleDrawer();
+      }
+    } else {
+      setIsUserProfileModalOpen(true);
       if (isDrawerOpen) {
         toggleDrawer();
       }
@@ -90,7 +97,7 @@ const NavBar = () => {
 
   // Disable body scroll when modal or drawer is open
   useEffect(() => {
-    if (isModalOpen || isDrawerOpen) {
+    if (isModalOpen || isDrawerOpen || isUserProfileModalOpen) {
       document.body.style.overflow = 'hidden';
       if (window.innerWidth > 768) {
         document.body.classList.add('pr-4');
@@ -104,7 +111,7 @@ const NavBar = () => {
       document.body.style.overflow = '';
       document.body.classList.remove('pr-4');
     };
-  }, [isModalOpen, isDrawerOpen]);
+  }, [isModalOpen, isDrawerOpen, isUserProfileModalOpen]);
 
   // Function to move the highlight element to the active button
   const moveHighlight = (button) => {
@@ -145,107 +152,133 @@ const NavBar = () => {
   }, [location.pathname]);
 
   return (
-    <header className='z-30 w-screen h-16 px-2 flex items-center justify-center fixed select-none'>
-      <nav className='bg-[#1a1818]/40 shadow-xl backdrop-blur-sm w-[85%] md:w-[50%] h-full flex items-center justify-between px-4 rounded-full mt-4 relative'>
-        {/* leftLogo */}
-        <div className='title left text-2xl flex items-center pr-3'>
-          <a href='/' className='text-white/80'>
-            <span className='text-blue-500 font-semibold'>ani</span>Stream
-          </a>
-        </div>
-        {/* centerTabs */}
-        <div className='tabs hidden center lg:flex flex-row items-center justify-center gap-2 relative'>
-          <div ref={highlightRef} className='absolute top-0 left-0 h-full bg-white/20 rounded-badge' style={{ width: 0 }} />
-          <button
-            ref={el => buttonRefs.current[0] = el}
-            className={`btn btn-ghost rounded-badge px-4 py-2 h-fit min-h-fit text-white hover:bg-transparent ${location.pathname === '/' ? 'bg-transparent' : ''}`}
-            onClick={() => handleNavigation('/', buttonRefs.current[0])}
-          >
-            Home
-          </button>
-          <button
-            ref={el => buttonRefs.current[1] = el}
-            className={`btn btn-ghost rounded-badge px-4 py-2 h-fit min-h-fit text-white hover:bg-transparent ${location.pathname === '/upload' ? 'bg-transparent' : ''}`}
-            onClick={() => handleNavigation('/upload', buttonRefs.current[1])}
-          >
-            Upload
-          </button>
-          <button
-            ref={el => buttonRefs.current[2] = el}
-            className={`btn btn-ghost rounded-badge px-4 py-2 h-fit min-h-fit text-white hover:bg-transparent ${location.pathname === '/contact' ? 'bg-transparent' : ''}`}
-            onClick={() => handleNavigation('/contact', buttonRefs.current[2])}
-          >
-            Contact
-          </button>
-        </div>
-        {/* rightMenus */}
-        <div className='menus right flex flex-row items-center justify-center pl-3 gap-[2px] lg:gap-2'>
-          <button className='cursor-pointer btn-ghost px-2 py-2 h-fit min-h-fit rounded-lg' onClick={toggleModal}>
-            <FiSearch size='24' />
-          </button>
-          <button className='btn btn-ghost px-2 py-2 h-fit min-h-fit lg:hidden' onClick={toggleDrawer}>
-            <HiMenuAlt3 size='24' />
-          </button>
-          <div className="avatar hidden lg:block cursor-pointer ring-1 ring-primary btn-ghost h-fit min-h-fit rounded-full" onClick={handleAuthClick}>
-            <div className="w-10 rounded-full">
-              <h1 className='flex items-center justify-center h-full font-semibold text-2xl bg-black/50'>
-                {getAvatarInitial()}
-              </h1>
-            </div>
+    <>
+      <header className='z-30 w-screen h-16 px-2 flex items-center justify-center fixed select-none'>
+        <nav className='bg-[#1a1818]/40 shadow-xl backdrop-blur-sm w-[85%] md:w-[50%] h-full flex items-center justify-between px-4 rounded-full mt-4 relative'>
+          {/* leftLogo */}
+          <div className='title left text-2xl flex items-center pr-3'>
+            <a href='/' className='text-white/80'>
+              <span className='text-blue-500 font-semibold'>ani</span>Stream
+            </a>
           </div>
-        </div>
-      </nav>
-
-      {/* Backdrop for Drawer */}
-      <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} z-10`}
-        onClick={toggleDrawer}
-      />
-
-      {/* Drawer */}
-      <div
-        ref={drawerRef}
-        className={`fixed right-0 top-0 w-3/4 max-w-[300px] h-full bg-[#1a1818] transform ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'} z-20`}
-      >
-        <div className='p-4 flex flex-col gap-4'>
-          <div className='m-2 flex justify-between items-center'>
-            <span className='text-white/80 text-2xl font-semibold'>Menu</span>
-            <button onClick={toggleDrawer} className='text-white/80 btn btn-ghost min-h-fit h-fit px-2 py-2 bg-black/50'>
-              <CgClose size='24' />
+          {/* centerTabs */}
+          <div className='tabs hidden center lg:flex flex-row items-center justify-center gap-2 relative'>
+            <div ref={highlightRef} className='absolute top-0 left-0 h-full bg-white/20 rounded-badge' style={{ width: 0 }} />
+            <button
+              ref={el => buttonRefs.current[0] = el}
+              className={`btn btn-ghost rounded-badge px-4 py-2 h-fit min-h-fit text-white hover:bg-transparent ${location.pathname === '/' ? 'bg-transparent' : ''}`}
+              onClick={() => handleNavigation('/', buttonRefs.current[0])}
+            >
+              Home
+            </button>
+            <button
+              ref={el => buttonRefs.current[1] = el}
+              className={`btn btn-ghost rounded-badge px-4 py-2 h-fit min-h-fit text-white hover:bg-transparent ${location.pathname === '/upload' ? 'bg-transparent' : ''}`}
+              onClick={() => handleNavigation('/upload', buttonRefs.current[1])}
+            >
+              Upload
+            </button>
+            <button
+              ref={el => buttonRefs.current[2] = el}
+              className={`btn btn-ghost rounded-badge px-4 py-2 h-fit min-h-fit text-white hover:bg-transparent ${location.pathname === '/contact' ? 'bg-transparent' : ''}`}
+              onClick={() => handleNavigation('/contact', buttonRefs.current[2])}
+            >
+              Contact
             </button>
           </div>
-          <button className={`btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center ${location.pathname === '/' ? 'bg-black/50' : ''}`} onClick={() => handleNavigation('/', buttonRefs.current[0])}>
-            Home
-            <GoHomeFill size="24"/>
-          </button>
-          <button className={`btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center ${location.pathname === '/upload' ? 'bg-black/50' : ''}`} onClick={() => handleNavigation('/upload', buttonRefs.current[1])}>
-            Upload
-            <BiSolidCloudUpload size="24"/>
-          </button>
-          <button className={`btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center ${location.pathname === '/contact' ? 'bg-black/50' : ''}`} onClick={() => handleNavigation('/contact', buttonRefs.current[2])}>
-            Contact
-            <MdEmail size="24"/>
-          </button>
-
-          <button 
-            className="btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center"
-            onClick={handleAuthClick}
-          >
-            {user ? user.username : 'Login'}
-            <div className="avatar cursor-pointer ring-1 ring-primary btn-ghost h-fit min-h-fit rounded-full">
+          {/* rightMenus */}
+          <div className='menus right flex flex-row items-center justify-center pl-3 gap-[2px] lg:gap-2'>
+            <button className='cursor-pointer btn-ghost px-2 py-2 h-fit min-h-fit rounded-lg' onClick={toggleModal}>
+              <FiSearch size='24' />
+            </button>
+            <button className='btn btn-ghost px-2 py-2 h-fit min-h-fit lg:hidden' onClick={toggleDrawer}>
+              <HiMenuAlt3 size='24' />
+            </button>
+            <div 
+              className="avatar hidden lg:block cursor-pointer ring-1 ring-primary btn-ghost h-fit min-h-fit rounded-full" 
+              onClick={handleAuthClick}
+            >
               <div className="w-10 rounded-full">
                 <h1 className='flex items-center justify-center h-full font-semibold text-2xl bg-black/50'>
                   {getAvatarInitial()}
                 </h1>
               </div>
             </div>
-          </button>
-        </div>
-      </div>
+          </div>
+        </nav>
 
-      {/* Search Modal */}
-      <SearchBar isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-    </header>
+        {/* Backdrop for Drawer */}
+        <div
+          className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} z-10`}
+          onClick={toggleDrawer}
+        />
+
+        {/* Drawer */}
+        <div
+          ref={drawerRef}
+          className={`fixed right-0 top-0 w-3/4 max-w-[300px] h-full bg-[#1a1818] transform ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'} z-20`}
+        >
+          <div className='p-4 flex flex-col gap-4 h-full'>
+            <div className='m-2 flex justify-between items-center'>
+              <span className='text-white/80 text-2xl font-semibold'>Menu</span>
+              <button onClick={toggleDrawer} className='text-white/80 btn btn-ghost min-h-fit h-fit px-2 py-2 bg-black/50'>
+                <CgClose size='24' />
+              </button>
+            </div>
+            <div className='flex flex-col items- justify-between  h-full'>
+              <div className='flex flex-col gap-4'>
+                <button 
+                  className={`btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center ${location.pathname === '/' ? 'bg-black/50' : ''}`} 
+                  onClick={() => handleNavigation('/', buttonRefs.current[0])}
+                >
+                  Home
+                  <GoHomeFill size="24"/>
+                </button>
+                <button 
+                  className={`btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center ${location.pathname === '/upload' ? 'bg-black/50' : ''}`} 
+                  onClick={() => handleNavigation('/upload', buttonRefs.current[1])}
+                >
+                  Upload
+                  <BiSolidCloudUpload size="24"/>
+                </button>
+                <button 
+                  className={`btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center ${location.pathname === '/contact' ? 'bg-black/50' : ''}`} 
+                  onClick={() => handleNavigation('/contact', buttonRefs.current[2])}
+                >
+                  Contact
+                  <MdEmail size="24"/>
+                </button>
+              </div>
+              <button 
+                className="btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center"
+                onClick={handleAuthClick}
+              >
+                {user ? user.username : 'Login'}
+                <div className="avatar cursor-pointer ring-1 ring-primary btn-ghost h-fit min-h-fit rounded-full">
+                  <div className="w-10 rounded-full">
+                    <h1 className='flex items-center justify-center h-full font-semibold text-2xl bg-black/50'>
+                      {getAvatarInitial()}
+                    </h1>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Search Modal */}
+        <SearchBar isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+      </header>
+
+      {/* User Profile Modal */}
+      <UserProfileModal 
+        user={user} 
+        isOpen={isUserProfileModalOpen} 
+        onClose={() => setIsUserProfileModalOpen(false)} 
+        setUser={setUser}
+      />
+    </>
   );
 };
 

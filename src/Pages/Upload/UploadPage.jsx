@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { BiSolidTrash } from "react-icons/bi";
 import ModifyUploads from '../../Components/ModifyUploads';
 
 const UploadPage = () => {
+  const navigate = useNavigate();
+  const [authStatus, setAuthStatus] = useState('checking');
   const [thumbnail, setThumbnail] = useState(null);
   const [video, setVideo] = useState(null);
   const [videoURL, setVideoURL] = useState('');
@@ -18,7 +22,33 @@ const UploadPage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showModifyUploads, setShowModifyUploads] = useState(false); // State for toggling sections
+  const [showModifyUploads, setShowModifyUploads] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+
+  // Authentication status check
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/auth/status', { withCredentials: true });
+        setAuthStatus(response.data.status);
+        
+        if (response.data.status === 'authenticated' && response.data.isAdmin === true) {
+          console.log('Welcome Admin');
+        } else {
+          console.log('Not Admin');
+          setShowAdminModal(true);
+        }
+      } catch (err) {
+        console.log('Authentication Error');
+        setAuthStatus('guest');
+        setShowAdminModal(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, [navigate]);
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
@@ -90,7 +120,7 @@ const UploadPage = () => {
       formData.append('episodeName', episodeName);
       formData.append('description', description);
     
-      const response = await fetch('http://192.168.101.70:5000/upload', {
+      const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
         body: formData,
       });
@@ -173,11 +203,32 @@ const UploadPage = () => {
     </div>
   );
 
+  const AdminAccessModal = () => (
+    <div className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg">Admin Access Required</h3>
+        <p className="py-4">You need to be an admin to perform this action.</p>
+        <div className="modal-action">
+          <button 
+            onClick={() => navigate('/')} 
+            className="btn btn-primary"
+          >
+            Okay
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {isLoading ? (
-        <div className="flex justify-center items-center min-h-svh">
+        <div className="flex justify-center h-full w-full items-center min-h-svh">
           <span className="loading loading-dots loading-md"></span>
+        </div>
+      ) : showAdminModal ? (
+        <div className='min-h-screen h-full w-full'>
+          <AdminAccessModal />
         </div>
       ) : (
         <main className='pt-24 p-2 min-h-screen h-full w-full pb-10'>
