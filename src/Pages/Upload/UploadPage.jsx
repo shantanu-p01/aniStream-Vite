@@ -90,7 +90,7 @@ const UploadPage = () => {
       formData.append('episodeName', episodeName);
       formData.append('description', description);
     
-      const response = await fetch('http://192.168.101.74:5000/upload', {
+      const response = await fetch('http://192.168.101.70:5000/upload', {
         method: 'POST',
         body: formData,
       });
