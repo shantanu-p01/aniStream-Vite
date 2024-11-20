@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AiOutlineClose } from 'react-icons/ai';
+import Cookies from 'js-cookie';
 
 const UserProfileModal = ({ user, isOpen, onClose, setUser }) => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const UserProfileModal = ({ user, isOpen, onClose, setUser }) => {
         // Redirect to home page
         navigate('/');
         window.location.reload();
+        Cookies.remove('token', { path: '/' }) // removed!
         // Optionally, you can add a toast or notification here
       } else {
         console.error('Logout failed');
