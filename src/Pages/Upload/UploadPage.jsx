@@ -7,6 +7,7 @@ import ModifyUploads from '../../Components/ModifyUploads';
 const UploadPage = () => {
   const navigate = useNavigate();
   const [authStatus, setAuthStatus] = useState('checking');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [thumbnail, setThumbnail] = useState(null);
   const [video, setVideo] = useState(null);
   const [videoURL, setVideoURL] = useState('');
@@ -23,40 +24,34 @@ const UploadPage = () => {
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showModifyUploads, setShowModifyUploads] = useState(false);
-  const [showAdminModal, setShowAdminModal] = useState(false);
 
   // Authentication status check
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await axios.get('https://backend.kubez.cloud/auth/status', { withCredentials: true });
-        setAuthStatus(response.data.status);
-        
-        if (response.data.status === 'authenticated' && response.data.isAdmin === true) {
+        const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', { withCredentials: true });
+        setAuthStatus('authenticated');
+        setIsAdmin(response.data.isAdmin || false);
+
+        if (response.data.isAdmin) {
           console.log('Welcome Admin');
         } else {
-          console.log('Not Admin');
-          setShowAdminModal(true);
+          console.log('Authenticated user');
         }
       } catch (err) {
-        console.log('Authentication Error');
+        console.log('Authentication error:', err.response?.data?.message || err.message);
         setAuthStatus('guest');
-        setShowAdminModal(true);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuthStatus();
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
     return () => {
-      clearTimeout(timer);
       document.body.style.overflow = 'auto';
     };
   }, [isLoading]);
@@ -203,34 +198,35 @@ const UploadPage = () => {
     </div>
   );
 
-  const AdminAccessModal = () => (
-    <div className="modal modal-open">
-      <div className="modal-box">
-        <h3 className="font-bold text-lg">Admin Access Required</h3>
-        <p className="py-4">You need to be an admin to perform this action.</p>
-        <div className="modal-action">
-          <button 
-            onClick={() => navigate('/')} 
-            className="btn btn-primary"
-          >
-            Okay
-          </button>
+  if (isLoading) {
+    return (
+      <div className="flex justify-center h-full w-full items-center min-h-svh">
+        <span className="loading loading-dots loading-md"></span>
+      </div>
+    );
+  }
+
+  if (authStatus === 'guest' || !isAdmin) {
+    return (
+      <div className="modal modal-open">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Admin Access Required</h3>
+          <p className="py-4">You need to be an admin to perform this action.</p>
+          <div className="modal-action">
+            <button 
+              onClick={() => navigate('/')} 
+              className="btn btn-primary"
+            >
+              Okay
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <>
-      {isLoading ? (
-        <div className="flex justify-center h-full w-full items-center min-h-svh">
-          <span className="loading loading-dots loading-md"></span>
-        </div>
-      ) : showAdminModal ? (
-        <div className='min-h-screen h-full w-full'>
-          <AdminAccessModal />
-        </div>
-      ) : (
         <main className='pt-24 p-2 min-h-screen h-full w-full pb-10'>
           <div className='flex flex-col h-full items-center justify-center gap-4 max-w-5xl mx-auto p-2 bg-black/20 rounded-lg'>
 
@@ -365,7 +361,6 @@ const UploadPage = () => {
           </div>
         )}
       </main>
-      )}
     </>
   );
 };

@@ -9,6 +9,7 @@ import { gsap } from 'gsap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import UserProfileModal from './UserProfileModal';
+import axios from 'axios';
 
 const NavBar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -25,16 +26,8 @@ const NavBar = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('https://backend.kubez.cloud/auth/status', {
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-        } else {
-          setUser(null);
-        }
+        const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', { withCredentials: true });
+        setUser(response.data);
       } catch (error) {
         console.error('Auth check failed:', error);
         setUser(null);
