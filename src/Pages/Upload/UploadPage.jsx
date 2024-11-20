@@ -25,29 +25,52 @@ const UploadPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showModifyUploads, setShowModifyUploads] = useState(false);
 
-  // Authentication status check
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', { withCredentials: true });
-        setAuthStatus('authenticated');
-        setIsAdmin(response.data.isAdmin || false);
+// Authentication status check
+useEffect(() => {
+  const checkAuthStatus = async () => {
+    try {
+      // Helper function to get a cookie value by name
+      const getCookie = (name) => {
+        const matches = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+        return matches ? decodeURIComponent(matches[1]) : null;
+      };
 
-        if (response.data.isAdmin) {
-          console.log('Welcome Admin');
-        } else {
-          console.log('Authenticated user');
-        }
-      } catch (err) {
-        console.log('Authentication error:', err.response?.data?.message || err.message);
+      // Fetch the token from cookies
+      const token = getCookie('token'); // Replace with the actual cookie name storing the token
+
+      if (!token) {
+        console.log('No token found in cookies.');
         setAuthStatus('guest');
-      } finally {
         setIsLoading(false);
+        return;
       }
-    };
 
-    checkAuthStatus();
-  }, []);
+      // Send API request with the token in headers
+      const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setAuthStatus('authenticated');
+      setIsAdmin(response.data.isAdmin || false);
+
+      if (response.data.isAdmin) {
+        console.log('Welcome Admin');
+      } else {
+        console.log('Authenticated user');
+      }
+    } catch (err) {
+      console.log('Authentication error:', err.response?.data?.message || err.message);
+      setAuthStatus('guest');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  checkAuthStatus();
+}, []);
+
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';

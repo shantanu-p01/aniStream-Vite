@@ -22,20 +22,41 @@ const NavBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Check authentication status on component mount
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', { withCredentials: true });
-        setUser(response.data);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        setUser(null);
-      }
-    };
+// Check authentication status on component mount
+useEffect(() => {
+  const checkAuthStatus = async () => {
+    try {
+      // Extract token from cookies
+      const getCookie = (name) => {
+        const matches = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+        return matches ? decodeURIComponent(matches[1]) : null;
+      };
 
-    checkAuthStatus();
-  }, []);
+      const token = getCookie('token'); // Replace 'token' with the name of your cookie
+
+      if (!token) {
+        console.error('No token found in cookies.');
+        setUser(null);
+        return;
+      }
+
+      // Send API request with the token in headers
+      const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUser(response.data);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setUser(null);
+    }
+  };
+
+  checkAuthStatus();
+}, []);
+
 
   // Handle avatar/login button click
   const handleAuthClick = () => {

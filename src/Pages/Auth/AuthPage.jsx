@@ -16,21 +16,40 @@ const AuthPage = () => {
   const [error, setError] = useState(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  // Check for authentication status on page load
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', { withCredentials: true });
-        
-        if (response.data.token) {
-          // Redirect to homepage if user is authenticated
-          navigate('/');
-        }
-      } catch (err) {
-        console.log('Authentication check failed');
-        // No need to do anything on error - user will stay on login page
+// Check for authentication status on page load
+useEffect(() => {
+  const checkAuthStatus = async () => {
+    try {
+      // Helper function to get a cookie value by name
+      const getCookie = (name) => {
+        const matches = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+        return matches ? decodeURIComponent(matches[1]) : null;
+      };
+
+      // Fetch the token from cookies
+      const token = getCookie('token'); // Replace with the actual cookie name storing the token
+
+      if (!token) {
+        console.log('No token found in cookies.');
+        return;
       }
-    };
+
+      // Send API request with the token in headers
+      const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.token) {
+        // Redirect to homepage if user is authenticated
+        navigate('/');
+      }
+    } catch (err) {
+      console.log('Authentication check failed:', err);
+      // No need to do anything on error - user will stay on the login page
+    }
+  };
 
     checkAuthStatus();
   }, [navigate]);
