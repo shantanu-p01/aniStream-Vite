@@ -1,5 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
-import { BrowserRouter } from 'react-router-dom';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import HomePage from "./Pages/Home/HomePage.jsx";
 import UploadPage from "./Pages/Upload/UploadPage.jsx";
 import PlayerPage from "./Pages/Player/PlayerPage.jsx";
@@ -12,7 +11,12 @@ import Footer from './Components/Footer.jsx';
 function App() {
   return (
     <>
-      <BrowserRouter>
+      <BrowserRouter   
+      future={{
+        v7_relativeSplatPath: true,
+        v7_startTransition: true,
+      }}
+      >
         <NavBar />
         <Routes>
           <Route path="/" element={<HomePage />} />

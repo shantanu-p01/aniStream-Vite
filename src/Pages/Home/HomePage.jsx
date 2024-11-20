@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { gsap } from 'gsap';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Modal = ({ isOpen, title, message, onClose }) => {
   if (!isOpen) return null;
@@ -20,6 +21,8 @@ const Modal = ({ isOpen, title, message, onClose }) => {
 };
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const [authStatus, setAuthStatus] = useState(null);
   const scrollContainerRef = useRef(null);
   const heroRef = useRef(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -53,8 +56,31 @@ const HomePage = () => {
       }
     };
 
-    fetchAnimeData();
+    return () => fetchAnimeData();
   }, []);
+
+  // Check for authentication status on page load
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/auth/status', { withCredentials: true });
+        setAuthStatus(response.data.status); // Set to 'authenticated' or 'guest'
+        
+        if (response.data.status === 'authenticated' && response.data.isAdmin === true) {
+          // Redirect to homepage if user is authenticated
+          // navigate('/');
+          console.log('Welcome Admin');
+        } else {
+          console.log('Welcome User');
+        }
+
+      } catch (err) {
+        console.log('Not Authenticated');
+        setAuthStatus('guest');
+      }
+    };
+    return () => checkAuthStatus();
+  }, [navigate]);
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';

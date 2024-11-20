@@ -32,7 +32,7 @@ const AuthPage = () => {
         setAuthStatus('guest');
       }
     };
-    checkAuthStatus();
+    return () => checkAuthStatus();
   }, [navigate]);
 
   // Handle form field changes
@@ -75,6 +75,7 @@ const AuthPage = () => {
       if (response.status === 200) {
         // Redirect to home or protected route upon successful login
         navigate('/');
+        window.location.reload();
       }
     } catch (err) {
       console.error('Login failed:', err);
@@ -101,7 +102,7 @@ const AuthPage = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <div className="w-full max-w-md p-6 bg-black/40 rounded-lg shadow-lg">
+      <div className="w-full max-w-md mx-3 p-6 bg-black/40 rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold text-center mb-4">
           {isRegistering ? 'Register' : 'Login'}
         </h2>

@@ -12,16 +12,58 @@ import SearchBar from './SearchBar';
 const NavBar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const drawerRef = useRef(null);
   const highlightRef = useRef(null);
   const buttonRefs = useRef([]);
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/auth/status', {
+          credentials: 'include' // Important for sending cookies
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setUser(null);
+      }
+    };
+
+    return () => checkAuthStatus();
+  }, []);
+
+  // Handle avatar/login button click
+  const handleAuthClick = () => {
+    if (!user) {
+      navigate('/auth');
+      if (isDrawerOpen) {
+        toggleDrawer();
+      }
+    }
+  };
+
+  // Get avatar initial
+  const getAvatarInitial = () => {
+    if (user && user.username) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
   // Function to toggle drawer visibility
   const toggleDrawer = useCallback(() => {
     if (isDrawerOpen) {
-      document.body.classList.remove('pr-4'); // Remove margin-right
+      document.body.classList.remove('pr-4');
       gsap.to(drawerRef.current, {
         x: '100%',
         duration: 0.3,
@@ -29,8 +71,8 @@ const NavBar = () => {
         onComplete: () => setIsDrawerOpen(false),
       });
     } else {
-      if (window.innerWidth > 768) { // Check for screens larger than md
-        document.body.classList.add('pr-4'); // Add margin-right
+      if (window.innerWidth > 768) {
+        document.body.classList.add('pr-4');
       }
       setIsDrawerOpen(true);
       gsap.fromTo(
@@ -49,18 +91,18 @@ const NavBar = () => {
   // Disable body scroll when modal or drawer is open
   useEffect(() => {
     if (isModalOpen || isDrawerOpen) {
-      document.body.style.overflow = 'hidden'; // Disable scrolling
-      if (window.innerWidth > 768) { // Check for screens larger than md
-        document.body.classList.add('pr-4'); // Add margin-right
+      document.body.style.overflow = 'hidden';
+      if (window.innerWidth > 768) {
+        document.body.classList.add('pr-4');
       }
     } else {
-      document.body.style.overflow = ''; // Enable scrolling
-      document.body.classList.remove('pr-4'); // Remove margin-right
+      document.body.style.overflow = '';
+      document.body.classList.remove('pr-4');
     }
 
     return () => {
-      document.body.style.overflow = ''; // Clean up when modal or drawer closes
-      document.body.classList.remove('pr-4'); // Ensure margin-right is removed on cleanup
+      document.body.style.overflow = '';
+      document.body.classList.remove('pr-4');
     };
   }, [isModalOpen, isDrawerOpen]);
 
@@ -82,23 +124,23 @@ const NavBar = () => {
   // Handle button clicks to navigate
   const handleNavigation = (path, buttonRef) => {
     navigate(path);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to the top of the page smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (isDrawerOpen) {
-      toggleDrawer(); // Close drawer if open
+      toggleDrawer();
     }
   };
 
   useEffect(() => {
-    // Move the highlight to the active button on initial render or location change
     const activeButtonIndex = {
       '/': 0,
-      '/player': 0, // Add /player to the home button
+      '/player': 0,
+      '/auth': 0,
       '/upload': 1,
       '/contact': 2
     }[location.pathname];
 
     if (activeButtonIndex !== undefined) {
-      setTimeout(() => moveHighlight(buttonRefs.current[activeButtonIndex]), 0); // Delay to allow for rendering
+      setTimeout(() => moveHighlight(buttonRefs.current[activeButtonIndex]), 0);
     }
   }, [location.pathname]);
 
@@ -106,14 +148,13 @@ const NavBar = () => {
     <header className='z-30 w-screen h-16 px-2 flex items-center justify-center fixed select-none'>
       <nav className='bg-[#1a1818]/40 shadow-xl backdrop-blur-sm w-[85%] md:w-[50%] h-full flex items-center justify-between px-4 rounded-full mt-4 relative'>
         {/* leftLogo */}
-        <div className='title left text-2xl flex items-center'>
+        <div className='title left text-2xl flex items-center pr-3'>
           <a href='/' className='text-white/80'>
             <span className='text-blue-500 font-semibold'>ani</span>Stream
           </a>
         </div>
         {/* centerTabs */}
         <div className='tabs hidden center lg:flex flex-row items-center justify-center gap-2 relative'>
-          {/* Highlight Element */}
           <div ref={highlightRef} className='absolute top-0 left-0 h-full bg-white/20 rounded-badge' style={{ width: 0 }} />
           <button
             ref={el => buttonRefs.current[0] = el}
@@ -138,13 +179,20 @@ const NavBar = () => {
           </button>
         </div>
         {/* rightMenus */}
-        <div className='menus right flex flex-row items-center justify-center pl-6 gap-[2px]'>
+        <div className='menus right flex flex-row items-center justify-center pl-3 gap-[2px] lg:gap-2'>
           <button className='cursor-pointer btn-ghost px-2 py-2 h-fit min-h-fit rounded-lg' onClick={toggleModal}>
             <FiSearch size='24' />
           </button>
           <button className='btn btn-ghost px-2 py-2 h-fit min-h-fit lg:hidden' onClick={toggleDrawer}>
             <HiMenuAlt3 size='24' />
           </button>
+          <div className="avatar hidden lg:block cursor-pointer ring-1 ring-primary btn-ghost h-fit min-h-fit rounded-full" onClick={handleAuthClick}>
+            <div className="w-10 rounded-full">
+              <h1 className='flex items-center justify-center h-full font-semibold text-2xl bg-black/50'>
+                {getAvatarInitial()}
+              </h1>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -177,6 +225,20 @@ const NavBar = () => {
           <button className={`btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center ${location.pathname === '/contact' ? 'bg-black/50' : ''}`} onClick={() => handleNavigation('/contact', buttonRefs.current[2])}>
             Contact
             <MdEmail size="24"/>
+          </button>
+
+          <button 
+            className="btn btn-ghost px-4 py-2 h-fit min-h-fit hover:bg-black/50 text-white/80 text-lg justify-between items-center"
+            onClick={handleAuthClick}
+          >
+            {user ? user.username : 'Login'}
+            <div className="avatar cursor-pointer ring-1 ring-primary btn-ghost h-fit min-h-fit rounded-full">
+              <div className="w-10 rounded-full">
+                <h1 className='flex items-center justify-center h-full font-semibold text-2xl bg-black/50'>
+                  {getAvatarInitial()}
+                </h1>
+              </div>
+            </div>
           </button>
         </div>
       </div>

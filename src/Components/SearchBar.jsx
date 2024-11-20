@@ -30,7 +30,7 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
       }
     };
 
-    fetchAnimeData();
+    return () => fetchAnimeData();
   }, []);
 
   // Filter anime based on search text
