@@ -78,7 +78,7 @@ const handleLogin = async (e) => {
 
     if (response.status === 200) {
       // If login is successful, set the token received in response to cookies
-      Cookies.set('token', response.data.token, { expires: 1 / 24, secure: true }); // Set token in cookies for 1 hour
+      Cookies.set('token', response.data.token, { expires: 1 / 24, secure: false }); // Set token in cookies for 1 hour
       // Redirect to home or protected route upon successful login
       navigate('/');
       window.location.reload();  // This is used to reload the page to reflect the logged-in state

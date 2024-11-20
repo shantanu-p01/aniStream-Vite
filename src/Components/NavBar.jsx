@@ -41,7 +41,7 @@ const NavBar = () => {
       }
     };
 
-    return () => checkAuthStatus();
+    checkAuthStatus();
   }, []);
 
   // Handle avatar/login button click
