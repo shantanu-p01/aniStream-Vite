@@ -47,7 +47,7 @@ const UploadPage = () => {
       }
     };
 
-    checkAuthStatus();
+    return () => checkAuthStatus();
   }, [navigate]);
 
   useEffect(() => {

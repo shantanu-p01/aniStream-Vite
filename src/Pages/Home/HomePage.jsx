@@ -53,7 +53,7 @@ const HomePage = () => {
       }
     };
 
-    return () => fetchAnimeData();
+    fetchAnimeData();
   }, []);
 
   useEffect(() => {

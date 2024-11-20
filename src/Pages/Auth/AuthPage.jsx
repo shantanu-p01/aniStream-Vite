@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importing React Icons for show/hide password
 
@@ -62,26 +63,31 @@ const AuthPage = () => {
     }
   };
 
-  // Handle form submission for login
-  const handleLogin = async (e) => {
-    e.preventDefault();
+// Handle form submission for login
+const handleLogin = async (e) => {
+  e.preventDefault();
 
-    try {
-      // Only email and password are sent for login
-      const { email, password } = formData;
-      const response = await axios.post('http://localhost:5000/auth/login', { email, password }, { withCredentials: true });
-      console.log('Login success:', response);
+  try {
+    // Only email and password are sent for login
+    const { email, password } = formData;
 
-      if (response.status === 200) {
-        // Redirect to home or protected route upon successful login
-        navigate('/');
-        window.location.reload();
-      }
-    } catch (err) {
-      console.error('Login failed:', err);
-      setError(err.response?.data?.message || 'An error occurred.');
+    // Send login request to backend
+    const response = await axios.post('http://localhost:5000/auth/login', { email, password });
+
+    console.log('Login success:', response);
+
+    if (response.status === 200) {
+      // If login is successful, set the token received in response to cookies
+      Cookies.set('token', response.data.token, { expires: 1 / 24, secure: true }); // Set token in cookies for 1 hour
+      // Redirect to home or protected route upon successful login
+      navigate('/');
+      window.location.reload();  // This is used to reload the page to reflect the logged-in state
     }
-  };
+  } catch (err) {
+    console.error('Login failed:', err);
+    setError(err.response?.data?.message || 'An error occurred.');
+  }
+};
 
   // Handle logout
   const handleLogout = async () => {
