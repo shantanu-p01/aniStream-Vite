@@ -21,7 +21,7 @@ const AuthPage = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/auth/status', { withCredentials: true });
+        const response = await axios.get('https://backend.kubez.cloud/auth/status', { withCredentials: true });
         setAuthStatus(response.data.status); // Set to 'authenticated' or 'guest'
         
         if (response.data.status === 'authenticated') {
@@ -50,7 +50,7 @@ const AuthPage = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:5000/auth/register', formData, { withCredentials: true });
+      const response = await axios.post('https://backend.kubez.cloud/auth/register', formData, { withCredentials: true });
       console.log('Registration success:', response);
 
       if (response.status === 201) {
@@ -72,7 +72,7 @@ const handleLogin = async (e) => {
     const { email, password } = formData;
 
     // Send login request to backend
-    const response = await axios.post('http://localhost:5000/auth/login', { email, password });
+    const response = await axios.post('https://backend.kubez.cloud/auth/login', { email, password });
 
     console.log('Login success:', response);
 
@@ -92,7 +92,7 @@ const handleLogin = async (e) => {
   // Handle logout
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:5000/auth/logout', {}, { withCredentials: true });
+      await axios.post('https://backend.kubez.cloud/auth/logout', {}, { withCredentials: true });
       setAuthStatus('guest');
       navigate('/login'); // Redirect to login page
     } catch (err) {

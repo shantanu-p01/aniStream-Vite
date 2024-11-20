@@ -29,7 +29,7 @@ const UploadPage = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/auth/status', { withCredentials: true });
+        const response = await axios.get('https://backend.kubez.cloud/auth/status', { withCredentials: true });
         setAuthStatus(response.data.status);
         
         if (response.data.status === 'authenticated' && response.data.isAdmin === true) {
@@ -47,7 +47,7 @@ const UploadPage = () => {
       }
     };
 
-    return () => checkAuthStatus();
+    checkAuthStatus();
   }, [navigate]);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ const UploadPage = () => {
       formData.append('episodeName', episodeName);
       formData.append('description', description);
     
-      const response = await fetch('http://localhost:5000/upload', {
+      const response = await fetch('https://backend.kubez.cloud/upload', {
         method: 'POST',
         body: formData,
       });

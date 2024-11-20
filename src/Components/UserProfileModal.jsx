@@ -7,7 +7,7 @@ const UserProfileModal = ({ user, isOpen, onClose, setUser }) => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:5000/auth/logout', {
+      const response = await fetch('https://backend.kubez.cloud/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });

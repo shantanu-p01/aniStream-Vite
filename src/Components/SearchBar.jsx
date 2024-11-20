@@ -17,7 +17,7 @@ const SearchBar = ({ isModalOpen, setIsModalOpen }) => {
   useEffect(() => {
     const fetchAnimeData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/anime-episodes');
+        const response = await fetch('https://backend.kubez.cloud/anime-episodes');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

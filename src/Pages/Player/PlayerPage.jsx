@@ -49,7 +49,7 @@ const PlayerPage = () => {
   const fetchAnimeDetails = async (anime) => {
     try {
       setError(null);
-      const response = await fetch(`http://localhost:5000/fetchAnimeDetails/${anime}`);
+      const response = await fetch(`https://backend.kubez.cloud/fetchAnimeDetails/${anime}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

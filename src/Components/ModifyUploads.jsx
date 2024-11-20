@@ -13,7 +13,7 @@ const ModifyUploads = () => {
   const [isEpisodeModalOpen, setIsEpisodeModalOpen] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/anime-episodes")
+    fetch("https://backend.kubez.cloud/anime-episodes")
       .then((res) => res.json())
       .then((data) => {
         const groupedData = data.reduce((acc, { anime_name, season_number, episode_number, thumbnail_url, episode_name }) => {
@@ -70,7 +70,7 @@ const ModifyUploads = () => {
     console.log("Deleting episode:", episodeDetailsToDelete); // Add this to check if correct values are being passed
 
     try {
-      const response = await fetch("http://localhost:5000/delete-episode", {
+      const response = await fetch("https://backend.kubez.cloud/delete-episode", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

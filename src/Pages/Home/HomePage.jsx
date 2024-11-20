@@ -34,7 +34,7 @@ const HomePage = () => {
     console.log("Fetching anime data...");
     const fetchAnimeData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/anime-episodes');
+        const response = await axios.get('https://backend.kubez.cloud/anime-episodes');
         if (response.data.length === 0) {
           throw new Error("No anime data found in the database.");
         }

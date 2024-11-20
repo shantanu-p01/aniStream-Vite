@@ -25,7 +25,7 @@ const NavBar = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('http://localhost:5000/auth/status', {
+        const response = await fetch('https://backend.kubez.cloud/auth/status', {
           credentials: 'include'
         });
         
