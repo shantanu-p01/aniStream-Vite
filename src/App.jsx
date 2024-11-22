@@ -7,8 +7,14 @@ import ErrorPage from './Pages/Error/ErrorPage.jsx';
 import AuthPage from './Pages/Auth/AuthPage.jsx'; // Import AuthPage
 import NavBar from './Components/NavBar.jsx';
 import Footer from './Components/Footer.jsx';
+import { useEffect } from 'react';
 
 function App() {
+  useEffect(() => {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 0); // Allow layout updates before scrolling
+  }, []);
   return (
     <>
       <BrowserRouter   
