@@ -85,10 +85,29 @@ const UploadPage = () => {
     if (loading) return; // Prevent file changes during upload
     const file = e.target.files[0];
     if (file) {
+      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      const validVideoTypes = ['video/mp4', 'video/x-matroska']; // `video/x-matroska` covers MKV format
+  
+      if (isVideo) {
+        if (!validVideoTypes.includes(file.type)) {
+          setModalMessage('Only MP4 and MKV video files are accepted.');
+          setShowModal(true);
+          return;
+        }
+      } else {
+        if (!validImageTypes.includes(file.type)) {
+          setModalMessage('Only JPEG, JPG, and PNG image files are accepted.');
+          setShowModal(true);
+          return;
+        }
+      }
+  
       setFile(file);
-      if (isVideo) setVideoURL(URL.createObjectURL(file));
+      if (isVideo) {
+        setVideoURL(URL.createObjectURL(file));
+      }
     }
-  };
+  };  
 
   // Function to toggle category selection
   const toggleCategorySelection = (category) => {
@@ -258,17 +277,19 @@ const UploadPage = () => {
 
   if (authStatus === 'guest' || !isAdmin) {
     return (
-      <div className="modal modal-open">
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">Admin Access Required</h3>
-          <p className="py-4">You need to be an admin to perform this action.</p>
-          <div className="modal-action">
-            <button 
-              onClick={() => navigate('/')} 
-              className="btn btn-primary"
-            >
-              Okay
-            </button>
+      <div className='w-full h-screen'>
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Admin Access Required</h3>
+            <p className="py-4">You need to be an admin to perform this action.</p>
+            <div className="modal-action">
+              <button 
+                onClick={() => navigate('/')} 
+                className="btn btn-primary"
+              >
+                Okay
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -324,20 +345,24 @@ const UploadPage = () => {
                       <div className='w-1/2'>
                         <label className='block text-white text-sm font-bold mb-2'>Season Number</label>
                         <input
-                          type='number'
+                          type='text'
+                          inputMode='numeric'
                           value={seasonNumber}
                           onChange={(e) => setSeasonNumber(e.target.value.replace(/\D/g, ''))}
-                          className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                          onWheel={(e) => e.target.blur()} // Prevent scrolling behavior
+                          className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500 appearance-none'
                           disabled={loading}
                         />
                       </div>
                       <div className='w-1/2'>
                         <label className='block text-white text-sm font-bold mb-2'>Episode Number</label>
                         <input
-                          type='number'
+                          type='text'
+                          inputMode='numeric'
                           value={episodeNumber}
                           onChange={(e) => setEpisodeNumber(e.target.value.replace(/\D/g, ''))}
-                          className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500'
+                          onWheel={(e) => e.target.blur()} // Prevent scrolling behavior
+                          className='w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500 appearance-none'
                           disabled={loading}
                         />
                       </div>
