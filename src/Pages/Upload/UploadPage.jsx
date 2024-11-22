@@ -15,6 +15,9 @@ const UploadPage = () => {
   const [episodeName, setEpisodeName] = useState('');
   const [seasonNumber, setSeasonNumber] = useState('');
   const [episodeNumber, setEpisodeNumber] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [tempCategories, setTempCategories] = useState([]);
   const [description, setDescription] = useState('');
   const [modalMessage, setModalMessage] = useState('');
   const [missingFields, setMissingFields] = useState([]);
@@ -25,52 +28,51 @@ const UploadPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showModifyUploads, setShowModifyUploads] = useState(false);
 
-// Authentication status check
-useEffect(() => {
-  const checkAuthStatus = async () => {
-    try {
-      // Helper function to get a cookie value by name
-      const getCookie = (name) => {
-        const matches = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-        return matches ? decodeURIComponent(matches[1]) : null;
-      };
+  // Authentication status check
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        // Helper function to get a cookie value by name
+        const getCookie = (name) => {
+          const matches = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+          return matches ? decodeURIComponent(matches[1]) : null;
+        };
 
-      // Fetch the token from cookies
-      const token = getCookie('token'); // Replace with the actual cookie name storing the token
+        // Fetch the token from cookies
+        const token = getCookie('token'); // Replace with the actual cookie name storing the token
 
-      if (!token) {
-        console.log('No token found in cookies.');
+        if (!token) {
+          console.log('No token found in cookies.');
+          setAuthStatus('guest');
+          setIsLoading(false);
+          return;
+        }
+
+        // Send API request with the token in headers
+        const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setAuthStatus('authenticated');
+        setIsAdmin(response.data.isAdmin || false);
+
+        if (response.data.isAdmin) {
+          console.log('Welcome Admin');
+        } else {
+          console.log('Authenticated user');
+        }
+      } catch (err) {
+        console.log('Authentication error:', err.response?.data?.message || err.message);
         setAuthStatus('guest');
+      } finally {
         setIsLoading(false);
-        return;
       }
+    };
 
-      // Send API request with the token in headers
-      const response = await axios.get('https://backend.kubez.cloud/auth/check-auth', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setAuthStatus('authenticated');
-      setIsAdmin(response.data.isAdmin || false);
-
-      if (response.data.isAdmin) {
-        console.log('Welcome Admin');
-      } else {
-        console.log('Authenticated user');
-      }
-    } catch (err) {
-      console.log('Authentication error:', err.response?.data?.message || err.message);
-      setAuthStatus('guest');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  checkAuthStatus();
-}, []);
-
+    checkAuthStatus();
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? 'hidden' : 'auto';
@@ -86,6 +88,29 @@ useEffect(() => {
       setFile(file);
       if (isVideo) setVideoURL(URL.createObjectURL(file));
     }
+  };
+
+  // Function to toggle category selection
+  const toggleCategorySelection = (category) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(category)) {
+        return prev.filter((item) => item !== category); // Remove category if already selected
+      } else {
+        return [...prev, category]; // Add category if not selected
+      }
+    });
+  };
+
+  // Open Categories Modal and store the current selected categories
+  const openCategoriesModal = () => {
+    setTempCategories([...selectedCategories]); // Store the selected categories before opening modal
+    setShowCategoriesModal(true);
+  };
+
+  // Handle closing the modal without saving (reverts categories)
+  const handleCloseCategoriesModal = () => {
+    setSelectedCategories([...tempCategories]); // Revert to the stored categories
+    setShowCategoriesModal(false);
   };
 
   const toggleModifyUploads = () => {
@@ -107,19 +132,20 @@ useEffect(() => {
     if (!video) emptyFields.push('Video');
     if (!episodeName) emptyFields.push('Episode Name');
     if (!description) emptyFields.push('Description');
+    if (selectedCategories.length === 0) emptyFields.push('Categories'); // Check for categories
   
     if (emptyFields.length) {
       setModalMessage(
-        emptyFields.length === 7
+        emptyFields.length === 8
           ? 'All required fields are empty.'
           : 'The following required fields are empty:'
       );
-      setMissingFields(emptyFields.length === 7 ? [] : emptyFields);
+      setMissingFields(emptyFields.length === 8 ? [] : emptyFields);
       setShowModal(true);
     } else {
       performUpload();
     }
-  };
+  };  
   
   const handleConfirmUpload = () => {
     setShowConfirmation(false);
@@ -136,6 +162,7 @@ useEffect(() => {
       formData.append('thumbnail', thumbnail);
       formData.append('video', video);
       formData.append('episodeName', episodeName);
+      formData.append('categories', JSON.stringify(selectedCategories));
       formData.append('description', description);
     
       const response = await fetch('https://backend.kubez.cloud/upload', {
@@ -315,6 +342,16 @@ useEffect(() => {
                         />
                       </div>
                     </div>
+                    <div className="mb-4">
+                      <label className="block text-white text-sm font-bold mb-2">Categories</label>
+                      <button
+                        onClick={openCategoriesModal}
+                        className="w-full px-3 py-2 rounded-lg bg-black/30 text-white border border-gray-600 focus:outline-none focus:border-blue-500"
+                        disabled={loading}
+                      >
+                        {selectedCategories.length > 0 ? selectedCategories.join(', ') : 'Select Categories'}
+                      </button>
+                    </div>
                     <div className='mb-4'>
                       <label className='block text-white text-sm font-bold mb-2'>Description</label>
                       <textarea
@@ -370,6 +407,34 @@ useEffect(() => {
                 <h3 className="font-bold text-lg">{modalMessage}</h3>
                 <div className="modal-action">
                   <button onClick={() => setShowSuccessModal(false)} className="btn">Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showCategoriesModal && (
+            <div className="modal modal-open">
+              <div className="modal-box pt-4">
+                <h3 className="font-bold text-lg pb-5">Select Categories</h3>
+                <div className="flex flex-wrap gap-2">
+                  {['Shonen', 'Seinen', 'Mystery', 'Comedy', 'Magic', 'Horror', 'Romance', 'Adventure'].map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => toggleCategorySelection(category)}
+                      className={`btn ${selectedCategories.includes(category) ? 'btn-success' : 'btn-ghost'} w-auto`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+                <div className="modal-action">
+                  <button onClick={handleCloseCategoriesModal} className="btn btn-error">Close</button>
+                  <button
+                    onClick={() => setShowCategoriesModal(false)}
+                    className="btn btn-success"
+                  >
+                    Save
+                  </button>
                 </div>
               </div>
             </div>
