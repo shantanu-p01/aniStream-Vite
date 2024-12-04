@@ -11,7 +11,7 @@ const Modal = ({ isOpen, title, message, onClose }) => {
 
   const handleClose = () => {
     onClose();
-    navigate('/contact'); // Navigate to /contact page
+    navigate('/contact');
   };
 
   return (
@@ -55,7 +55,7 @@ const AnimeSection = ({ title, animeList, scrollContainerRef, handleScroll, scro
       >
         {animeList.map(({ anime_name, thumbnail_url }, index) => (
           <a
-            key={index}
+            key={anime_name}
             href={`/player?anime=${encodeURIComponent(anime_name)}`}
             className="flex-none w-[175px] snap-start bg-black/20 rounded-lg p-2 shadow-lg transition hover:bg-black/40"
           >
@@ -84,7 +84,6 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Utility function to shuffle an array
   const shuffleArray = (array) => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -94,9 +93,7 @@ const HomePage = () => {
     return shuffled;
   };
 
-  // Fetch anime data from the backend
   useEffect(() => {
-    console.log('Fetching anime data...');
     const fetchAnimeData = async () => {
       try {
         const response = await axios.get('https://backend.kubez.cloud/anime-episodes');
@@ -104,19 +101,22 @@ const HomePage = () => {
           throw new Error('No anime data found in the database.');
         }
 
-        const parsedAnimeData = response.data.map((anime) => ({
+        // Remove duplicates based on anime_name
+        const uniqueAnimeData = Array.from(
+          new Map(response.data.map(anime => [anime.anime_name, anime])).values()
+        ).map((anime) => ({
           ...anime,
-          categories: JSON.parse(anime.categories), // Parse the categories JSON string
+          categories: JSON.parse(anime.categories),
         }));
 
-        // Sort anime data by uploaded date (assuming `uploaded_at` exists)
-        const sortedAnime = [...parsedAnimeData].sort(
+        // Sort anime data by uploaded date
+        const sortedAnime = [...uniqueAnimeData].sort(
           (a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at)
         );
-        setLatestAnime(sortedAnime.slice(0, 10)); // Display top 10 latest anime
+        setLatestAnime(sortedAnime.slice(0, 10)); // Display top 10 latest unique anime
 
         const categorized = {};
-        parsedAnimeData.forEach((anime) => {
+        uniqueAnimeData.forEach((anime) => {
           anime.categories.forEach((category) => {
             if (!categorized[category]) categorized[category] = [];
             categorized[category].push(anime);
@@ -131,7 +131,7 @@ const HomePage = () => {
           ])
         );
 
-        setAnimeData(parsedAnimeData);
+        setAnimeData(uniqueAnimeData);
         setCategorizedAnime(shuffledCategorizedAnime);
       } catch (err) {
         setError(err.message || 'An error occurred while fetching anime data.');
